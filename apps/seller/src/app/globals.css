@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 44 83% 47%;
+    --primary-foreground: 30 20% 8%;
+    --secondary: 44 20% 94%;
+    --secondary-foreground: 44 30% 20%;
+    --muted: 44 10% 94%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 44 83% 47%;
+    --accent-foreground: 30 20% 8%;
+    --border: 44 15% 88%;
+    --ring: 44 83% 47%;
+    --radius: 0.5rem;
+
+    /* ConneqtCar brand colors */
+    --brand-gold: 44 83% 47%;
+    --brand-gold-light: 45 89% 62%;
+    --brand-gold-dark: 44 88% 35%;
+    --brand-dark: 228 27% 8%;
+  }
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}

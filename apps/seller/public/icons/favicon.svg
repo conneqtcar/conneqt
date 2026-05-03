@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="192" height="192">
+  <rect width="500" height="500" rx="80" fill="#0D0D1A"/>
+  <defs>
+    <linearGradient id="g" x1="35" y1="58" x2="456" y2="442" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F5D060"/>
+      <stop offset="50%" stop-color="#D4A217"/>
+      <stop offset="100%" stop-color="#8A6400"/>
+    </linearGradient>
+  </defs>
+  <polygon fill="url(#g)" points="35,58 388,58 456,110 305,184 35,184"/>
+  <polygon fill="url(#g)" points="205,191 205,228 35,209"/>
+  <polygon fill="url(#g)" points="205,235 205,272 35,253"/>
+  <polygon fill="url(#g)" points="205,279 205,314 35,296"/>
+  <polygon fill="url(#g)" points="35,317 305,317 456,388 388,442 35,442"/>
+</svg>
+  <!-- Speed lines fanning left from C -->
+  <line x1="16" y1="56"  x2="38" y2="56"  stroke="url(#gld)" stroke-width="4"  stroke-linecap="round"/>
+  <line x1="10" y1="69"  x2="38" y2="69"  stroke="url(#gld)" stroke-width="5"  stroke-linecap="round"/>
+  <line x1="6"  y1="82"  x2="38" y2="82"  stroke="url(#gld)" stroke-width="6"  stroke-linecap="round"/>
+  <line x1="4"  y1="97"  x2="38" y2="97"  stroke="url(#gld)" stroke-width="7"  stroke-linecap="round"/>
+  <line x1="6"  y1="112" x2="38" y2="112" stroke="url(#gld)" stroke-width="6"  stroke-linecap="round"/>
+  <line x1="10" y1="125" x2="38" y2="125" stroke="url(#gld)" stroke-width="5"  stroke-linecap="round"/>
+  <line x1="16" y1="138" x2="38" y2="138" stroke="url(#gld)" stroke-width="4"  stroke-linecap="round"/>
+  <!-- C letter: thick arc opening to the right -->
+  <path d="M 151,56 A 58,58 0 1,0 151,138" fill="none" stroke="url(#gld)" stroke-width="26" stroke-linecap="round"/>
+</svg>

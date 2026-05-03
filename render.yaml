@@ -1,0 +1,80 @@
+# render.yaml — Conneqt Infrastructure as Code
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Este arquivo configura todos os serviços do Conneqt no Render.
+# Para usar: conecte o repositório no Render e clique em "Apply Blueprint".
+#
+# IMPORTANTE: Após o primeiro deploy, copie as URLs geradas e preencha
+# as variáveis FRONTEND_URL, SELLER_URL e ADMIN_URL na API,
+# e NEXT_PUBLIC_API_URL + NEXT_PUBLIC_WS_URL nos apps Next.js.
+
+services:
+  # ── 1. API NestJS ─────────────────────────────────────────────────────────
+  - type: web
+    name: conneqt-api
+    runtime: node
+    region: oregon  # troque para "frankfurt" se quiser mais próximo do Brasil
+    plan: free       # troque para "starter" ($7/mês) para remover sleep de 15min
+    rootDir: .
+    buildCommand: |
+      npm install -g pnpm@9 &&
+      pnpm install --frozen-lockfile &&
+      cd packages/database && npx prisma generate && npx tsc --project tsconfig.json && cd ../.. &&
+      cd apps/api && pnpm exec nest build
+    startCommand: node apps/api/dist/main.js
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: 3001
+      # DATABASE (Supabase)
+      - key: DATABASE_URL
+        sync: false   # preencher no dashboard
+      - key: DIRECT_URL
+        sync: false   # preencher no dashboard
+      # REDIS (provisionado abaixo como conneqt-redis)
+      - key: REDIS_URL
+        fromService:
+          name: conneqt-redis
+          type: redis
+          property: connectionString
+      # JWT
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      # URLs dos frontends (preencher após deploy dos apps na Vercel)
+      - key: FRONTEND_URL
+        sync: false   # ex: https://conneqt.vercel.app
+      - key: SELLER_URL
+        sync: false   # ex: https://conneqt-seller.vercel.app
+      - key: ADMIN_URL
+        sync: false   # ex: https://conneqt-admin.vercel.app
+      # FIPE (público, não precisa de chave)
+      - key: FIPE_API_URL
+        value: https://parallelum.com.br/fipe/api/v2
+      # AWS S3 (opcional para testes — deixe vazio para pular uploads)
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_CLOUDFRONT_URL
+        sync: false
+
+  # ── 2. Redis ──────────────────────────────────────────────────────────────
+  - type: redis
+    name: conneqt-redis
+    region: oregon
+    plan: free       # 25MB, suficiente para cache e sessões em testes
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # permite acesso apenas de serviços internos do Render

@@ -1,0 +1,29 @@
+{
+  "name": "conneqtcar",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "turbo run db:generate --filter=@conneqtcar/database",
+    "db:migrate": "turbo run db:migrate --filter=@conneqtcar/database",
+    "db:studio": "turbo run db:studio --filter=@conneqtcar/database",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "docker:logs": "docker compose -f docker/docker-compose.yml logs -f"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2",
+    "prettier": "^3.4.2",
+    "eslint": "^9.17.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

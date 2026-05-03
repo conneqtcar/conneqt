@@ -1,0 +1,352 @@
+// =============================================
+// AutoBridge — Prisma Schema
+// =============================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =============================================
+// ENUMS
+// =============================================
+
+enum UserType {
+  PF
+  PJ
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  SUSPENDED
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_SUBMITTED
+}
+
+enum VehicleStatus {
+  DRAFT
+  INSPECTION_PENDING
+  INSPECTION_IN_PROGRESS
+  INSPECTION_APPROVED
+  INSPECTION_REJECTED
+  LISTED
+  SOLD
+  INACTIVE
+}
+
+enum FuelType {
+  FLEX
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  CVT
+  SEMI_AUTO
+}
+
+enum InspectionType {
+  REMOTE
+  PRESENTIAL
+  PARTNER
+}
+
+enum InspectionStatus {
+  PENDING
+  IN_PROGRESS
+  AWAITING_REVIEW
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+  DOCUMENT
+}
+
+enum ListingStatus {
+  ACTIVE
+  INACTIVE
+  SOLD
+  EXPIRED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COUNTER
+  EXPIRED
+  CANCELLED
+}
+
+enum DealerPlan {
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum DealerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+// =============================================
+// USUÁRIOS
+// =============================================
+
+model User {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  passwordHash        String     @map("password_hash")
+  name                String
+  phone               String?
+  cpf                 String?    @unique
+  type                UserType   @default(PF)
+  status              UserStatus @default(ACTIVE)
+  kycStatus           KycStatus  @default(NOT_SUBMITTED) @map("kyc_status")
+  avatarUrl           String?    @map("avatar_url")
+
+  // KYC timestamps
+  kycSubmittedAt      DateTime?  @map("kyc_submitted_at")
+  kycApprovedAt       DateTime?  @map("kyc_approved_at")
+  kycRejectionReason  String?    @map("kyc_rejection_reason")
+
+  // Block info
+  blockReason         String?    @map("block_reason")
+
+  lastLoginAt         DateTime?  @map("last_login_at")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  // Relações
+  vehicles            Vehicle[]
+  sellerListings      Listing[]        @relation("SellerListings")
+  buyerProposals      Proposal[]       @relation("BuyerProposals")
+  refreshTokens       RefreshToken[]
+  chatMessages        ChatMessage[]
+  dealer              Dealer?
+  inspectionsReviewed Inspection[]     @relation("InspectionReviewer")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  tokenHash  String   @map("token_hash")
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// =============================================
+// VEÍCULOS
+// =============================================
+
+model Vehicle {
+  id           String        @id @default(uuid())
+  ownerId      String        @map("owner_id")
+  plate        String?       @unique
+  chassis      String?       @unique
+  renavam      String?       @unique
+  brand        String?
+  model        String?
+  year         Int?
+  color        String?
+  mileage      Int           @default(0)
+  fuelType     FuelType?     @map("fuel_type")
+  transmission TransmissionType? @map("transmission")
+  fipeCode     String?       @map("fipe_code")
+  fipePrice    Float?        @map("fipe_price")
+  status       VehicleStatus @default(DRAFT)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  owner       User         @relation(fields: [ownerId], references: [id])
+  inspections Inspection[]
+  listings    Listing[]
+
+  @@map("vehicles")
+}
+
+// =============================================
+// INSPEÇÕES
+// =============================================
+
+model Inspection {
+  id             String           @id @default(uuid())
+  vehicleId      String           @map("vehicle_id")
+  type           InspectionType   @default(REMOTE)
+  status         InspectionStatus @default(PENDING)
+  score          Int?
+  reviewerId     String?          @map("reviewer_id")
+  reviewedAt     DateTime?        @map("reviewed_at")
+  reviewNotes    String?          @map("review_notes")
+  aiFlags        String[]         @default([]) @map("ai_flags")
+  aiProcessedAt  DateTime?        @map("ai_processed_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  vehicle  Vehicle           @relation(fields: [vehicleId], references: [id])
+  reviewer User?             @relation("InspectionReviewer", fields: [reviewerId], references: [id])
+  media    InspectionMedia[]
+  items    InspectionItem[]
+
+  @@map("inspections")
+}
+
+model InspectionMedia {
+  id           String    @id @default(uuid())
+  inspectionId String    @map("inspection_id")
+  type         MediaType
+  url          String
+  key          String    // S3 key
+  hash         String    // SHA-256
+  metadata     Json?
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  inspection Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@map("inspection_media")
+}
+
+model InspectionItem {
+  id           String   @id @default(uuid())
+  inspectionId String   @map("inspection_id")
+  category     String   // ex: BODYWORK, MECHANICS, INTERIOR, DOCUMENTATION
+  item         String   // ex: "Parachoque dianteiro"
+  result       String   // OK | NOK | NA
+  score        Int?
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  inspection Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@map("inspection_items")
+}
+
+// =============================================
+// ANÚNCIOS (MARKETPLACE)
+// =============================================
+
+model Listing {
+  id               String        @id @default(uuid())
+  vehicleId        String        @map("vehicle_id")
+  sellerId         String        @map("seller_id")
+  price            Float
+  description      String?
+  acceptsFinancing Boolean       @default(false) @map("accepts_financing")
+  acceptsTrade     Boolean       @default(false) @map("accepts_trade")
+  status           ListingStatus @default(ACTIVE)
+  views            Int           @default(0)
+  expiresAt        DateTime?     @map("expires_at")
+  soldAt           DateTime?     @map("sold_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  vehicle      Vehicle       @relation(fields: [vehicleId], references: [id])
+  seller       User          @relation("SellerListings", fields: [sellerId], references: [id])
+  proposals    Proposal[]
+  chatMessages ChatMessage[]
+  dealerListing DealerListing?
+
+  @@map("listings")
+}
+
+// =============================================
+// PROPOSTAS
+// =============================================
+
+model Proposal {
+  id            String         @id @default(uuid())
+  listingId     String         @map("listing_id")
+  buyerId       String         @map("buyer_id")
+  amount        Float
+  message       String?
+  status        ProposalStatus @default(PENDING)
+  counterAmount Float?         @map("counter_amount")
+  respondedAt   DateTime?      @map("responded_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  listing  Listing @relation(fields: [listingId], references: [id])
+  buyer    User    @relation("BuyerProposals", fields: [buyerId], references: [id])
+
+  @@map("proposals")
+}
+
+// =============================================
+// CHAT
+// =============================================
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  listingId String   @map("listing_id")
+  senderId  String   @map("sender_id")
+  content   String
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  sender  User    @relation(fields: [senderId], references: [id])
+
+  @@map("chat_messages")
+}
+
+// =============================================
+// LOJISTAS
+// =============================================
+
+model Dealer {
+  id           String       @id @default(uuid())
+  userId       String       @unique @map("user_id")
+  companyName  String       @map("company_name")
+  cnpj         String       @unique
+  plan         DealerPlan   @default(STARTER)
+  status       DealerStatus @default(PENDING)
+  commissionRate Float      @default(0.035) @map("commission_rate")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  user     User            @relation(fields: [userId], references: [id])
+  listings DealerListing[]
+
+  @@map("dealers")
+}
+
+model DealerListing {
+  id        String   @id @default(uuid())
+  dealerId  String   @map("dealer_id")
+  listingId String   @unique @map("listing_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  dealer  Dealer  @relation(fields: [dealerId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@map("dealer_listings")
+}

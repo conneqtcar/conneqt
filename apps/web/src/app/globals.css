@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 44 83% 47%;
+    --primary-foreground: 30 20% 8%;
+    --secondary: 44 20% 94%;
+    --secondary-foreground: 44 30% 20%;
+    --muted: 44 10% 94%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 44 83% 47%;
+    --accent-foreground: 30 20% 8%;
+    --border: 44 15% 88%;
+    --ring: 44 83% 47%;
+    --radius: 0.5rem;
+
+    /* ConneqtCar brand colors */
+    --brand-gold: 44 83% 47%;
+    --brand-gold-light: 45 89% 62%;
+    --brand-gold-dark: 44 88% 35%;
+    --brand-dark: 228 27% 8%;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   PWA / Mobile — ajustes globais
+   ────────────────────────────────────────────────────────────────────────────── */
+
+/* Padding inferior para a BottomNav em mobile (64px = h-16) */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Páginas com conteúdo rolável deixam espaço para a BottomNav */
+  main,
+  .page-content {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Suporte a safe-area-inset no iOS (notch / dynamic island) */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Remove tap highlight no mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Melhora scroll em containers dentro de iOS */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Impede seleção de texto em elementos de UI interativos */
+button,
+[role='button'],
+label {
+  user-select: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Animações premium
+   ────────────────────────────────────────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-fade-in-up  { animation: fadeInUp  0.6s ease-out both; }
+.animate-fade-in     { animation: fadeIn    0.6s ease-out both; }
+.animate-scale-in    { animation: scaleIn   0.5s ease-out both; }
+.animate-slide-left  { animation: slideInLeft  0.6s ease-out both; }
+.animate-slide-right { animation: slideInRight 0.6s ease-out both; }
+.animate-float       { animation: float 4s ease-in-out infinite; }
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+.delay-800 { animation-delay: 0.8s; }
+
+/* Shimmer skeleton */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* Gradient animado */
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}
+
+/* In-view fade (para JS toggle) */
+.in-view-hidden {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.in-view-hidden.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+

@@ -1,0 +1,40 @@
+# Node
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Turbo
+.turbo/
+
+# Test
+coverage/
+.nyc_output/
+
+# Prisma
+prisma/migrations/
+
+# Docker volumes
+docker/data/

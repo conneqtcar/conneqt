@@ -1,0 +1,74 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: autobridge_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autobridge
+      POSTGRES_PASSWORD: autobridge
+      POSTGRES_DB: autobridge_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U autobridge -d autobridge_dev']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: autobridge_redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass autobridge_redis
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--no-auth-warning', '-a', 'autobridge_redis', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: autobridge_redis_ui
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: 'local:redis:6379:0:autobridge_redis'
+    ports:
+      - '8082:8081'
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: autobridge_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@autobridge.com.br
+      PGADMIN_DEFAULT_PASSWORD: autobridge
+    ports:
+      - '5050:80'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  redis_data:
+  pgadmin_data:
+
+networks:
+  default:
+    name: autobridge_network

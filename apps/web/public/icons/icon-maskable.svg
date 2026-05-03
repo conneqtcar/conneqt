@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="512" height="512">
+  <!-- Maskable: safe zone center 60% = 100-400px, logo scaled to fit -->
+  <rect width="500" height="500" fill="#0D0D1A"/>
+  <defs>
+    <linearGradient id="g" x1="118" y1="128" x2="391" y2="372" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F5D060"/>
+      <stop offset="50%" stop-color="#D4A217"/>
+      <stop offset="100%" stop-color="#8A6400"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(110,115) scale(0.57)">
+    <polygon fill="url(#g)" points="35,58 388,58 456,110 305,184 35,184"/>
+    <polygon fill="url(#g)" points="205,191 205,228 35,209"/>
+    <polygon fill="url(#g)" points="205,235 205,272 35,253"/>
+    <polygon fill="url(#g)" points="205,279 205,314 35,296"/>
+    <polygon fill="url(#g)" points="35,317 305,317 456,388 388,442 35,442"/>
+  </g>
+</svg>
+  <defs>
+    <linearGradient id="gld" x1="0" y1="104" x2="0" y2="413" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F5C842"/>
+      <stop offset="100%" stop-color="#B8860B"/>
+    </linearGradient>
+  </defs>
+  <!-- Dark brand background (full bleed for maskable) -->
+  <rect width="512" height="512" fill="#0D0D1A"/>
+  <!-- Speed lines (scaled 2.667×) -->
+  <line x1="43"  y1="149" x2="101" y2="149" stroke="url(#gld)" stroke-width="11" stroke-linecap="round"/>
+  <line x1="27"  y1="184" x2="101" y2="184" stroke="url(#gld)" stroke-width="13" stroke-linecap="round"/>
+  <line x1="16"  y1="219" x2="101" y2="219" stroke="url(#gld)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="11"  y1="259" x2="101" y2="259" stroke="url(#gld)" stroke-width="19" stroke-linecap="round"/>
+  <line x1="16"  y1="299" x2="101" y2="299" stroke="url(#gld)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="27"  y1="333" x2="101" y2="333" stroke="url(#gld)" stroke-width="13" stroke-linecap="round"/>
+  <line x1="43"  y1="368" x2="101" y2="368" stroke="url(#gld)" stroke-width="11" stroke-linecap="round"/>
+  <!-- C letter (scaled 2.667×) -->
+  <path d="M 403,149 A 155,155 0 1,0 403,368" fill="none" stroke="url(#gld)" stroke-width="69" stroke-linecap="round"/>
+</svg>
