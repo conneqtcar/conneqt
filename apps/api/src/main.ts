@@ -75,8 +75,9 @@ async function bootstrap() {
     });
   }
 
-  const port = configService.get<number>('API_PORT', 3001);
-  await app.listen(port);
+  // Render injeta PORT automaticamente; API_PORT serve como fallback local
+  const port = process.env.PORT ?? configService.get<number>('API_PORT', 3001);
+  await app.listen(port, '0.0.0.0');
 
   console.log(`\n🚀 Conneqt API rodando em: http://localhost:${port}`);
   console.log(`📑 Swagger disponível em:     http://localhost:${port}/api/docs\n`);

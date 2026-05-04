@@ -27,8 +27,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: API_PORT
-        value: 3001
+      # API_PORT não é necessário — Render injeta PORT automaticamente
       # DATABASE (Supabase)
       - key: DATABASE_URL
         sync: false   # preencher no dashboard
