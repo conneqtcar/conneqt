@@ -106,9 +106,8 @@ export function HeroSection() {
 
       {/* ── Navbar ── */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
-        <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight text-white">
-          <img src="/icons/logo.svg" alt="Conneqt" className="h-6 w-6" />
-          <span className="text-xl">Conneqt</span>
+        <Link href="/" className="flex items-center">
+          <img src="/icons/logonome.png" alt="Conneqt Car" className="h-9 w-auto object-contain" />
         </Link>
         <div className="hidden items-center gap-1 md:flex">
           {[
@@ -139,8 +138,18 @@ export function HeroSection() {
         </div>
       </nav>
 
+      {/* ── Mascote (desktop) ── */}
+      <div className="pointer-events-none absolute bottom-0 right-4 z-10 hidden select-none md:block lg:right-12">
+        <img
+          src="/icons/mascote.svg"
+          alt=""
+          aria-hidden
+          className="h-[420px] w-auto animate-[float_4s_ease-in-out_infinite] object-contain drop-shadow-2xl lg:h-[500px]"
+        />
+      </div>
+
       {/* ── Conteúdo central ── */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-8 text-center md:px-12">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-8 text-center md:px-12 md:pr-[340px] lg:pr-[420px]">
 
         {/* Badge */}
         <div className="in-view-hidden hero-anim animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
