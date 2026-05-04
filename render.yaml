@@ -19,8 +19,9 @@ services:
     buildCommand: >-
       npm install -g pnpm@9 &&
       pnpm install --frozen-lockfile &&
-      cd packages/database && pnpm exec prisma generate && pnpm exec tsc --project tsconfig.json && cd ../.. &&
-      cd apps/api && pnpm exec nest build
+      node_modules/.bin/prisma generate --schema=packages/database/prisma/schema.prisma &&
+      cd packages/database && node_modules/.bin/tsc --project tsconfig.json && cd ../.. &&
+      cd apps/api && node_modules/.bin/nest build
     startCommand: node apps/api/dist/main.js
     healthCheckPath: /api/v1/health
     autoDeploy: true
