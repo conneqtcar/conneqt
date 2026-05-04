@@ -18,7 +18,8 @@ services:
     rootDir: .
     buildCommand: >-
       npm install -g pnpm@9 &&
-      pnpm install --frozen-lockfile &&
+      pnpm install --no-frozen-lockfile &&
+      pnpm add -w @prisma/client &&
       cd packages/database && ../../node_modules/.bin/prisma generate && ../../node_modules/.bin/tsc --project tsconfig.json && cd ../.. &&
       cd apps/api && ../../node_modules/.bin/nest build
     startCommand: node apps/api/dist/main.js
