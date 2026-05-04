@@ -16,11 +16,12 @@ services:
     region: oregon  # troque para "frankfurt" se quiser mais próximo do Brasil
     plan: free       # troque para "starter" ($7/mês) para remover sleep de 15min
     rootDir: .
-    buildCommand: |
+    buildCommand: >-
       npm install -g pnpm@9 &&
       pnpm install --frozen-lockfile &&
-      cd packages/database && npx prisma generate && npx tsc --project tsconfig.json && cd ../.. &&
-      cd apps/api && pnpm exec nest build
+      pnpm --filter @conneqtcar/database exec prisma generate &&
+      pnpm --filter @conneqtcar/database exec tsc --project tsconfig.json &&
+      pnpm --filter @conneqtcar/api run build
     startCommand: node apps/api/dist/main.js
     healthCheckPath: /api/v1/health
     autoDeploy: true
