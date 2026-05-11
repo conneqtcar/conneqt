@@ -9,12 +9,16 @@ import {
   UseGuards,
   Header,
   UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { IsString, IsOptional, IsBoolean, IsInt, IsUrl, Min } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BannersService } from './banners.service';
+import { StorageService } from '../storage/storage.service';
 
 class CreateBannerDto {
   @IsOptional()
@@ -56,7 +60,10 @@ class UpdateBannerDto {
 @ApiTags('banners')
 @Controller('banners')
 export class BannersController {
-  constructor(private readonly bannersService: BannersService) {}
+  constructor(
+    private readonly bannersService: BannersService,
+    private readonly storageService: StorageService,
+  ) {}
 
   /** Rota pública — usada pela home do web */
   @Get()
@@ -75,6 +82,30 @@ export class BannersController {
   @ApiOperation({ summary: 'Listar todos os banners (admin)' })
   findAll() {
     return this.bannersService.findAll();
+  }
+
+  @Post('upload')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload de imagem para banner (retorna URL)' })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(new BadRequestException('Apenas imagens são permitidas.'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado.');
+    const ext = file.originalname.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const key = `banners/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const url = await this.storageService.uploadBuffer(key, file.buffer, file.mimetype);
+    return { url };
   }
 
   @Post()

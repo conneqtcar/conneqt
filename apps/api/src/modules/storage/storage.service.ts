@@ -40,6 +40,18 @@ export class StorageService {
     return getSignedUrl(this.s3, command, { expiresIn });
   }
 
+  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<string> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+      ACL: 'public-read' as any,
+    });
+    await this.s3.send(command);
+    return this.getPublicUrl(key);
+  }
+
   async deleteObject(key: string): Promise<void> {
     await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
