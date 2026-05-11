@@ -28,6 +28,8 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
+  if (pathname === '/login') return null;
+
   const handleLogout = () => {
     localStorage.removeItem('admin_access_token');
     localStorage.removeItem('admin_refresh_token');
