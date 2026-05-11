@@ -42,16 +42,16 @@ function NavLink({
       onClick={onClick}
       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
         active
-          ? 'bg-brand-gold text-white shadow-sm'
-          : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+          ? 'bg-white/25 text-white shadow-sm'
+          : 'text-white/70 hover:bg-white/15 hover:text-white'
       }`}
     >
-      <item.icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-white' : 'text-gray-400'}`} />
+      <item.icon className={`h-4 w-4 flex-shrink-0 ${active ? 'text-white' : 'text-white/60'}`} />
       <span className="flex-1">{item.label}</span>
       {badge !== undefined && badge > 0 && (
         <span
           className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-            active ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-600'
+            active ? 'bg-white/20 text-white' : 'bg-white/20 text-white'
           }`}
         >
           {badge}
@@ -74,18 +74,15 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-brand-gold">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-dark">
-          <img src="/icons/logo.svg" alt="Conneqt" className="h-5 w-5" />
-        </div>
-        <span className="text-lg font-extrabold text-gray-900">Conneqt</span>
-        <span className="ml-auto rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-brand-gold">
+        <img src="/icons/logonome.png" alt="Conneqt" className="h-8 w-auto" />
+        <span className="ml-auto rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white">
           vendedor
         </span>
         {onClose && (
-          <button onClick={onClose} className="ml-1 rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+          <button onClick={onClose} className="ml-1 rounded-lg p-1 text-white/60 hover:bg-white/15">
             <X className="h-4 w-4" />
           </button>
         )}
@@ -109,7 +106,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
         <Link
           href="/cadastrar"
           onClick={onClose}
-          className="flex items-center justify-center gap-2 rounded-xl bg-amber-50 px-4 py-2.5 text-sm font-semibold text-brand-gold transition hover:bg-amber-100"
+          className="flex items-center justify-center gap-2 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/30"
         >
           <Plus className="h-4 w-4" />
           Novo veículo
@@ -118,19 +115,19 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
 
       {/* Profile mini */}
       {profile && (
-        <div className="border-t border-gray-100 px-3 py-3">
+        <div className="border-t border-white/20 px-3 py-3">
           <Link
             href="/perfil"
             onClick={onClose}
-            className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-gray-50"
+            className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/15"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={profile.avatar} alt={profile.name} className="h-9 w-9 rounded-full object-cover" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-gray-900">{profile.name}</p>
-              <p className="text-xs text-gray-400">Ver perfil</p>
+              <p className="truncate text-sm font-semibold text-white">{profile.name}</p>
+              <p className="text-xs text-white/60">Ver perfil</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300" />
+            <ChevronRight className="h-4 w-4 text-white/40" />
           </Link>
         </div>
       )}
@@ -149,7 +146,7 @@ export function SellerShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-gray-100 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">
         <Sidebar />
       </aside>
 
@@ -162,10 +159,7 @@ export function SellerShell({ children }: { children: React.ReactNode }) {
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-dark">
-            <img src="/icons/logo.svg" alt="Conneqt" className="h-4 w-4" />
-          </div>
-          <span className="font-extrabold text-gray-900">Conneqt</span>
+          <img src="/icons/logonome.png" alt="Conneqt" className="h-7 w-auto" />
         </div>
         {profile ? (
           <Link href="/perfil">

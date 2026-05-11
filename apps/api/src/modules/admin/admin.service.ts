@@ -1,5 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@conneqtcar/database';
+import * as bcrypt from 'bcryptjs';
 import { PRISMA_SERVICE } from '../database/database.module';
 
 @Injectable()
@@ -77,6 +78,167 @@ export class AdminService {
       where: { id: userId },
       data: { kycStatus: 'REJECTED', kycRejectionReason: reason },
       select: { id: true, kycStatus: true },
+    });
+  }
+
+  async createDealer(dto: {
+    companyName: string;
+    cnpj: string;
+    plan: 'STARTER' | 'PRO' | 'ENTERPRISE';
+    name: string;
+    email: string;
+    phone?: string;
+    password: string;
+  }) {
+    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (existing) throw new ConflictException('E-mail já cadastrado.');
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: dto.email,
+          passwordHash,
+          name: dto.name,
+          phone: dto.phone,
+          type: 'PF',
+          status: 'ACTIVE',
+          kycStatus: 'APPROVED',
+        },
+      });
+
+      const dealer = await tx.dealer.create({
+        data: {
+          companyName: dto.companyName,
+          cnpj: dto.cnpj,
+          plan: dto.plan ?? 'STARTER',
+          userId: user.id,
+        },
+        select: {
+          id: true,
+          companyName: true,
+          cnpj: true,
+          plan: true,
+          status: true,
+          createdAt: true,
+          user: { select: { id: true, name: true, email: true } },
+        },
+      });
+
+      return dealer;
+    });
+  }
+
+  async deactivateListing(listingId: string) {
+    return this.prisma.listing.update({
+      where: { id: listingId },
+      data: { status: 'INACTIVE' },
+      select: { id: true, status: true },
+    });
+  }
+
+  async createListing(dto: {
+    brand: string;
+    model: string;
+    year: number;
+    color: string;
+    mileage: number;
+    fuelType: string;
+    transmission: string;
+    bodyType?: string;
+    doors?: number;
+    plate?: string;
+    chassis?: string;
+    renavam?: string;
+    price: number;
+    description?: string;
+    acceptsFinancing: boolean;
+    acceptsTrade: boolean;
+    sellerEmail?: string;
+    photoUrls?: string[];
+  }) {
+    // Resolve seller
+    let seller = dto.sellerEmail
+      ? await this.prisma.user.findUnique({ where: { email: dto.sellerEmail } })
+      : null;
+
+    if (!seller) {
+      seller = await this.prisma.user.findFirst({ where: { type: 'ADMIN' } });
+    }
+    if (!seller) throw new NotFoundException('Nenhum usuário disponível para associar ao anúncio.');
+
+    // Build description with extra fields
+    const extras: string[] = [];
+    if (dto.bodyType) extras.push(dto.bodyType);
+    if (dto.doors) extras.push(`${dto.doors} portas`);
+    const description = [dto.description, extras.join(' · ')].filter(Boolean).join('\n');
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Create vehicle
+      const vehicle = await tx.vehicle.create({
+        data: {
+          ownerId: seller!.id,
+          brand: dto.brand,
+          model: dto.model,
+          year: dto.year,
+          color: dto.color,
+          mileage: dto.mileage,
+          fuelType: dto.fuelType as any,
+          transmission: dto.transmission as any,
+          plate: dto.plate || null,
+          chassis: dto.chassis || null,
+          renavam: dto.renavam || null,
+          status: 'LISTED',
+        },
+      });
+
+      // 2. Create auto-approved inspection with media (required for listing)
+      const inspection = await tx.inspection.create({
+        data: {
+          vehicleId: vehicle.id,
+          type: 'PRESENTIAL',
+          status: 'APPROVED',
+          score: 100,
+          reviewedAt: new Date(),
+          reviewNotes: 'Cadastrado manualmente pelo administrador.',
+        },
+      });
+
+      if (dto.photoUrls?.length) {
+        await tx.inspectionMedia.createMany({
+          data: dto.photoUrls.map((url, i) => ({
+            inspectionId: inspection.id,
+            type: /\.(mp4|mov|avi|webm)$/i.test(url) ? 'VIDEO' : ('PHOTO' as any),
+            url,
+            key: `admin/${vehicle.id}/${i}-${Date.now()}`,
+            hash: `admin-${vehicle.id}-${i}`,
+          })),
+        });
+      }
+
+      // 3. Create listing
+      const expiresAt = new Date();
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
+      const listing = await tx.listing.create({
+        data: {
+          vehicleId: vehicle.id,
+          sellerId: seller!.id,
+          price: dto.price,
+          description: description || null,
+          acceptsFinancing: dto.acceptsFinancing,
+          acceptsTrade: dto.acceptsTrade,
+          status: 'ACTIVE',
+          expiresAt,
+        },
+        include: {
+          vehicle: { select: { brand: true, model: true, year: true, plate: true } },
+          seller: { select: { name: true, email: true } },
+        },
+      });
+
+      return listing;
     });
   }
 }

@@ -175,6 +175,7 @@ export const MOCK_SELLER_PROFILE = {
   rating: 4.8,
   ratingCount: 12,
   avgSaleDays: 18,
+  kycStatus: 'APPROVED',
 };
 
 // ─── MOCK ROUTER ─────────────────────────────────────────────────────────────
@@ -195,6 +196,34 @@ function getMockData(url: string, method: string): unknown {
   }
   if (url.includes('/vehicles') && method === 'post') {
     return { id: 'my-v-new', brand: 'Demo', model: 'Veículo', year: 2024, status: 'DRAFT' };
+  }
+
+  // Chat
+  if (url.includes('/chat/conversations') && method === 'get') {
+    return [
+      {
+        listingId: 'mock-1',
+        price: 89900,
+        status: 'ACTIVE',
+        vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+        lastMessage: {
+          content: 'Quando podemos fazer a vistoria presencial?',
+          createdAt: '2026-04-18T11:05:00Z',
+          sender: { id: 'b3', name: 'Lucas Pereira' },
+        },
+      },
+      {
+        listingId: 'mock-2',
+        price: 89900,
+        status: 'ACTIVE',
+        vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+        lastMessage: {
+          content: 'Aceita parcelamento no cartão?',
+          createdAt: '2026-04-20T15:35:00Z',
+          sender: { id: 'b2', name: 'Fernanda Melo' },
+        },
+      },
+    ];
   }
 
   // Proposals

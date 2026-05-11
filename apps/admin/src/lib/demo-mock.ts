@@ -395,7 +395,7 @@ const MOCK_INSPECTION_DETAILS: Record<string, object> = {
   },
 };
 
-function getMockData(url: string, method: string): unknown {
+function getMockData(url: string, method: string, body?: Record<string, unknown>): unknown {
   if (url.includes('/admin/dashboard') && method === 'get') {
     return {
       totalUsers: 1247,
@@ -416,6 +416,23 @@ function getMockData(url: string, method: string): unknown {
   if (url.includes('/inspections/') && (method === 'patch' || method === 'post')) {
     return { success: true, message: 'Operação realizada com sucesso.' };
   }
+  if (url.includes('/admin/listings') && method === 'post') {
+    const newListing = {
+      id: `l-${Date.now()}`,
+      status: 'ACTIVE',
+      price: (body?.price as number) ?? 0,
+      createdAt: new Date().toISOString(),
+      vehicle: {
+        brand: (body?.brand as string) ?? 'Marca',
+        model: (body?.model as string) ?? 'Modelo',
+        year: (body?.year as number) ?? new Date().getFullYear(),
+        plate: (body?.plate as string) ?? '',
+      },
+      seller: { name: 'Admin', email: 'admin@conneqtcar.com.br' },
+    };
+    MOCK_LISTINGS.push(newListing as typeof MOCK_LISTINGS[0]);
+    return newListing;
+  }
   if (url.includes('/listings') && method === 'get') {
     return { data: MOCK_LISTINGS, total: MOCK_LISTINGS.length };
   }
@@ -424,6 +441,18 @@ function getMockData(url: string, method: string): unknown {
   }
   if (url.includes('/dealers') && method === 'get') {
     return { data: MOCK_DEALERS, total: MOCK_DEALERS.length };
+  }
+  if (url.includes('/admin/dealers') && method === 'post') {
+    return {
+      id: `d-${Date.now()}`,
+      companyName: 'Nova Loja Demo',
+      cnpj: '00.000.000/0000-00',
+      plan: 'STARTER',
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+      user: { name: 'Responsável Demo', email: 'demo@loja.com' },
+      _count: { listings: 0 },
+    };
   }
   if (url.includes('/admin/users') && method === 'get') {
     return { data: MOCK_USERS, total: MOCK_USERS.length };
@@ -439,7 +468,15 @@ export function demoAdapter(
 ): Promise<AxiosResponse> {
   const url = config.url ?? '';
   const method = (config.method ?? 'get').toLowerCase();
-  const data = getMockData(url, method);
+  let body: Record<string, unknown> | undefined;
+  try {
+    body = config.data
+      ? typeof config.data === 'string'
+        ? JSON.parse(config.data)
+        : config.data
+      : undefined;
+  } catch { body = undefined; }
+  const data = getMockData(url, method, body);
 
   return Promise.resolve({
     data,

@@ -32,7 +32,7 @@ export const apiServer = {
       }
       return fetchApi<{ vehicle: { brand: string; model: string; year: number }; price: number; description: string | null }>(
         `/listings/${id}`,
-        { next: { revalidate: 60 } },
+        { next: { revalidate: 300, tags: [`listing-${id}`] } },
       );
     },
     search: (params: Record<string, string | undefined>) => {
@@ -42,7 +42,7 @@ export const apiServer = {
       const query = new URLSearchParams(
         Object.entries(params).filter(([, v]) => v !== undefined) as [string, string][],
       ).toString();
-      return fetchApi(`/listings?${query}`, { next: { revalidate: 30 } });
+      return fetchApi(`/listings?${query}`, { next: { revalidate: 60 } });
     },
   },
 };

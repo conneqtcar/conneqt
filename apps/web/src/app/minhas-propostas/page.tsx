@@ -2,8 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Loader2, ArrowRight, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
 import api from '@/lib/api';
+import { ChatWindow } from '@/components/chat/chat-window';
 
 const STATUS_MAP = {
   PENDING: { label: 'Aguardando', color: 'text-amber-600', bg: 'bg-amber-50' },
@@ -14,6 +16,9 @@ const STATUS_MAP = {
 } as const;
 
 export default function MinhasPropostasPage() {
+  const [openChatListingId, setOpenChatListingId] = useState<string | null>(null);
+  const [openChatMeta, setOpenChatMeta] = useState<{ title: string; seller: string } | null>(null);
+
   const { data: proposals, isLoading } = useQuery({
     queryKey: ['my_proposals'],
     queryFn: async () => {
@@ -69,6 +74,22 @@ export default function MinhasPropostasPage() {
                       </p>
                       <p className="text-sm text-gray-500">Valor oferecido: R$ {proposal.amount.toLocaleString('pt-BR')}</p>
                     </Link>
+
+                    {proposal.status === 'ACCEPTED' && (
+                      <button
+                        onClick={() => {
+                          setOpenChatListingId(proposal.listingId);
+                          setOpenChatMeta({
+                            title: `${proposal.listing?.vehicle?.brand ?? ''} ${proposal.listing?.vehicle?.model ?? ''}`.trim(),
+                            seller: proposal.listing?.seller?.name ?? 'Vendedor',
+                          });
+                        }}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-gold py-2.5 text-sm font-semibold text-white hover:bg-brand-gold-dark transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Abrir Chat com o Vendedor
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -76,6 +97,18 @@ export default function MinhasPropostasPage() {
           </div>
         )}
       </main>
+
+      {openChatListingId && openChatMeta && (
+        <ChatWindow
+          listingId={openChatListingId}
+          listingTitle={openChatMeta.title}
+          sellerName={openChatMeta.seller}
+          onClose={() => {
+            setOpenChatListingId(null);
+            setOpenChatMeta(null);
+          }}
+        />
+      )}
     </div>
   );
 }

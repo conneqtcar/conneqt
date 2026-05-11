@@ -24,5 +24,10 @@ export class RegisterDto {
   @IsEnum(['PF', 'PJ'])
   @IsOptional()
   type?: 'PF' | 'PJ';
+
+  @ApiPropertyOptional({ enum: ['BUYER', 'SELLER'], default: 'BUYER', description: 'BUYER = aprovado automaticamente; SELLER = KYC PENDING até análise.' })
+  @IsEnum(['BUYER', 'SELLER'])
+  @IsOptional()
+  role?: 'BUYER' | 'SELLER';
 }
 

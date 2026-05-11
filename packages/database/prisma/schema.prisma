@@ -191,6 +191,9 @@ model Vehicle {
   inspections Inspection[]
   listings    Listing[]
 
+  @@index([ownerId])
+  @@index([brand, model])
+  @@index([status])
   @@map("vehicles")
 }
 
@@ -217,6 +220,8 @@ model Inspection {
   media    InspectionMedia[]
   items    InspectionItem[]
 
+  @@index([vehicleId])
+  @@index([vehicleId, status])
   @@map("inspections")
 }
 
@@ -275,6 +280,10 @@ model Listing {
   chatMessages ChatMessage[]
   dealerListing DealerListing?
 
+  @@index([status])
+  @@index([sellerId])
+  @@index([vehicleId])
+  @@index([status, createdAt(sort: Desc)])
   @@map("listings")
 }
 
@@ -297,6 +306,9 @@ model Proposal {
   listing  Listing @relation(fields: [listingId], references: [id])
   buyer    User    @relation("BuyerProposals", fields: [buyerId], references: [id])
 
+  @@index([listingId])
+  @@index([buyerId])
+  @@index([listingId, status])
   @@map("proposals")
 }
 

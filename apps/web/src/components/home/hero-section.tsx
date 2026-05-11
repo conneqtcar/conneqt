@@ -1,15 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Shield, ShieldCheck, ArrowRight, Search, TrendingUp, Users, Star } from 'lucide-react';
+import { Shield, ShieldCheck, ArrowRight, Search, TrendingUp, Users, Star, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const BG_IMAGES = [
-  'https://picsum.photos/seed/hero-car-1/1920/1080',
-  'https://picsum.photos/seed/hero-car-3/1920/1080',
-  'https://picsum.photos/seed/hero-car-5/1920/1080',
+  'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80',
+  'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1920&q=80',
+  'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1920&q=80',
 ];
+
+const POPULAR_SEARCHES = ['Fiat Argo', 'Honda HRV', 'Toyota Corolla', 'Hyundai Creta'];
 
 const STATS = [
   { value: 10000, suffix: '+', label: 'Veículos verificados', icon: <ShieldCheck className="h-5 w-5" /> },
@@ -39,14 +41,16 @@ function StatCard({ stat, active, delay }: { stat: typeof STATS[0]; active: bool
   const count = useCountUp(stat.value, 1800, active);
   return (
     <div
-      className="in-view-hidden flex flex-col items-center gap-1 text-center"
+      className={`in-view-hidden flex flex-row items-center justify-center gap-2 text-center ${active ? 'is-visible' : ''}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      <div className="mb-1 flex items-center gap-1.5 text-brand-gold-light">{stat.icon}</div>
-      <div className="text-2xl font-extrabold text-white md:text-3xl">
-        {stat.prefix ?? ''}{count.toLocaleString('pt-BR')}{stat.suffix}
+      <div className="text-brand-gold-light">{stat.icon}</div>
+      <div className="flex flex-col items-start">
+        <div className="text-sm font-bold text-white">
+          {stat.prefix ?? ''}{count.toLocaleString('pt-BR')}{stat.suffix}
+        </div>
+        <div className="text-[10px] leading-tight text-amber-100/60">{stat.label}</div>
       </div>
-      <div className="text-xs text-amber-100/80 md:text-sm">{stat.label}</div>
     </div>
   );
 }
@@ -55,6 +59,7 @@ export function HeroSection() {
   const [activeImg, setActiveImg] = useState(0);
   const [statsVisible, setStatsVisible] = useState(false);
   const [query, setQuery] = useState('');
+  const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
 
   // Slideshow automático
@@ -77,6 +82,13 @@ export function HeroSection() {
     });
   }, []);
 
+  // Esconde scroll indicator após scroll
+  useEffect(() => {
+    const onScroll = () => { if (window.scrollY > 60) setScrolled(true); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -84,8 +96,14 @@ export function HeroSection() {
     router.push(`/buscar?${params.toString()}`);
   }
 
+  function handlePill(term: string) {
+    const params = new URLSearchParams();
+    params.set('brand', term);
+    router.push(`/buscar?${params.toString()}`);
+  }
+
   return (
-    <section className="relative flex min-h-screen flex-col overflow-hidden">
+    <section className="relative flex min-h-screen flex-col overflow-hidden noise-overlay">
       {/* ── Background slideshow ── */}
       {BG_IMAGES.map((src, i) => (
         // eslint-disable-next-line @next/next/no-img-element
@@ -106,8 +124,9 @@ export function HeroSection() {
 
       {/* ── Navbar ── */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
-        <Link href="/" className="flex items-center">
-          <img src="/icons/logonome.png" alt="Conneqt Car" className="h-9 w-auto object-contain" />
+        <Link href="/" className="flex items-center gap-1">
+          <img src="/icons/logo.svg" alt="Conneqt" className="h-8 w-8 object-contain" />
+          <img src="/icons/logonome.png" alt="Conneqt Car" className="h-7 w-auto object-contain" />
         </Link>
         <div className="hidden items-center gap-1 md:flex">
           {[
@@ -139,40 +158,53 @@ export function HeroSection() {
       </nav>
 
       {/* ── Mascote (desktop) ── */}
-      <div className="pointer-events-none absolute bottom-0 right-4 z-10 hidden select-none md:block lg:right-12">
+      <div className="pointer-events-none absolute bottom-0 right-0 z-10 hidden select-none md:block lg:right-8">
         <img
           src="/icons/mascote.svg"
           alt=""
           aria-hidden
-          className="h-[420px] w-auto animate-[float_4s_ease-in-out_infinite] object-contain drop-shadow-2xl lg:h-[500px]"
+          className="h-[560px] w-auto animate-[float_4s_ease-in-out_infinite] object-contain drop-shadow-2xl lg:h-[680px]"
         />
       </div>
 
       {/* ── Conteúdo central ── */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-8 text-center md:px-12 md:pr-[340px] lg:pr-[420px]">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-8 text-center md:px-12 md:pr-[260px] lg:pr-[340px]">
 
-        {/* Badge */}
-        <div className="in-view-hidden hero-anim animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          Plataforma 100% verificada e segura
-        </div>
-
-        <h1 className="in-view-hidden hero-anim delay-100 mb-6 max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight text-white md:text-6xl lg:text-7xl">
-          Compre e venda carros{' '}
-          <span className="bg-gradient-to-r from-brand-gold-light to-brand-gold bg-clip-text text-transparent">
-            sem surpresas
+        {/* H1 — word-by-word reveal */}
+        <h1 className="mb-6 max-w-4xl text-4xl font-extrabold leading-[1.15] tracking-tight text-white md:text-6xl lg:text-7xl">
+          <span className="flex flex-wrap justify-center gap-x-[0.22em]">
+            {['Compre', 'e', 'venda', 'carros'].map((word, i) => (
+              <span
+                key={word + i}
+                className="hero-anim opacity-0"
+                style={{ animationDelay: `${80 + i * 80}ms`, animationFillMode: 'forwards' }}
+              >
+                {word}
+              </span>
+            ))}
+          </span>
+          <span className="mt-1 flex flex-wrap justify-center gap-x-[0.22em]">
+            {['sem', 'surpresas'].map((word, i) => (
+              <span
+                key={word + i}
+                className="hero-anim bg-gradient-to-r from-brand-gold-light to-brand-gold bg-clip-text text-transparent opacity-0"
+                style={{ animationDelay: `${400 + i * 80}ms`, animationFillMode: 'forwards' }}
+              >
+                {word}
+              </span>
+            ))}
           </span>
         </h1>
 
-        <p className="in-view-hidden hero-anim delay-200 mb-10 max-w-2xl text-base text-white/70 md:text-xl">
+        <p className="in-view-hidden hero-anim delay-200 mb-8 max-w-2xl text-base text-white/70 md:text-xl">
           Todo veículo passa por inspeção com laudo digital verificável.
-          Pagamento via escrow. O jeito inteligente de negociar.
+          O jeito inteligente de negociar com segurança.
         </p>
 
         {/* Search bar integrada */}
         <form
           onSubmit={handleSearch}
-          className="in-view-hidden hero-anim delay-300 mb-8 flex w-full max-w-xl overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md"
+          className="in-view-hidden hero-anim delay-300 mb-3 flex w-full max-w-xl overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-md"
         >
           <div className="flex flex-1 items-center gap-3 px-4">
             <Search className="h-5 w-5 flex-shrink-0 text-white/50" />
@@ -192,14 +224,28 @@ export function HeroSection() {
           </button>
         </form>
 
+        {/* Popular search pills */}
+        <div className="in-view-hidden hero-anim delay-300 mb-8 flex flex-wrap justify-center gap-2">
+          {POPULAR_SEARCHES.map((term) => (
+            <button
+              key={term}
+              onClick={() => handlePill(term)}
+              className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/60 backdrop-blur-sm transition hover:border-white/30 hover:bg-white/10 hover:text-white"
+            >
+              {term}
+            </button>
+          ))}
+        </div>
+
         {/* CTAs */}
         <div className="in-view-hidden hero-anim delay-400 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/buscar"
-            className="group flex items-center gap-2 rounded-2xl bg-brand-gold px-8 py-4 text-base font-bold text-white shadow-lg shadow-amber-500/30 transition hover:bg-brand-gold-dark hover:shadow-amber-400/40 active:scale-95"
+            className="cta-pulse group relative flex items-center gap-2 rounded-2xl bg-brand-gold px-8 py-4 text-base font-bold text-white shadow-lg shadow-amber-500/30 transition hover:bg-brand-gold-dark hover:shadow-amber-400/40 active:scale-95"
           >
             Ver Veículos
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <span className="absolute inset-0 rounded-2xl ring-0 ring-brand-gold/40 transition-all duration-300 group-hover:ring-4 group-hover:ring-offset-2 group-hover:ring-offset-transparent" />
           </Link>
           <Link
             href={process.env.NEXT_PUBLIC_SELLER_URL ?? 'http://localhost:5001'}
@@ -211,7 +257,7 @@ export function HeroSection() {
         </div>
 
         {/* Indicadores do slideshow */}
-        <div className="in-view-hidden hero-anim delay-500 mt-10 flex gap-2">
+        <div className="in-view-hidden hero-anim delay-500 mt-8 flex gap-2">
           {BG_IMAGES.map((_, i) => (
             <button
               key={i}
@@ -222,21 +268,27 @@ export function HeroSection() {
             />
           ))}
         </div>
+
+        {/* Scroll-down indicator */}
+        <div
+          className={`mt-6 flex flex-col items-center gap-1 transition-opacity duration-500 ${scrolled ? 'opacity-0' : 'opacity-100'}`}
+          aria-hidden
+        >
+          <span className="text-[10px] font-medium uppercase tracking-widest text-white/25">scroll</span>
+          <ChevronDown className="h-4 w-4 animate-bounce text-white/25" />
+        </div>
       </div>
 
       {/* ── Stats strip ── */}
       <div className="relative z-10 border-t border-white/10 bg-black/30 backdrop-blur-sm">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-6 py-8 md:grid-cols-4 md:px-12">
+        <div className="mx-auto grid max-w-5xl grid-cols-4 gap-4 px-6 py-3 md:px-12">
           {STATS.map((stat, i) => (
-            <div
+            <StatCard
               key={stat.label}
-              className={`in-view-hidden flex flex-col items-center gap-1 text-center ${statsVisible ? 'is-visible' : ''}`}
-              style={{ transitionDelay: `${i * 100}ms` }}
-            >
-              <div className="mb-1 text-brand-gold-light">{stat.icon}</div>
-              <StatCard stat={stat} active={statsVisible} delay={i * 100} />
-              <div className="text-xs text-amber-100/70 md:text-sm">{stat.label}</div>
-            </div>
+              stat={stat}
+              active={statsVisible}
+              delay={i * 120}
+            />
           ))}
         </div>
       </div>

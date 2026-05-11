@@ -21,11 +21,11 @@ interface Inspection {
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   PENDING: { label: 'Pendente', cls: 'bg-gray-100 text-gray-700' },
-  MEDIA_SUBMITTED: { label: 'Mídias enviadas', cls: 'bg-amber-100 text-brand-gold' },
-  PROCESSING: { label: 'Processando', cls: 'bg-yellow-100 text-yellow-700' },
+  IN_PROGRESS: { label: 'Em andamento', cls: 'bg-amber-100 text-brand-gold' },
   AWAITING_REVIEW: { label: 'Aguardando revisão', cls: 'bg-orange-100 text-orange-700' },
   APPROVED: { label: 'Aprovada', cls: 'bg-green-100 text-green-700' },
   REJECTED: { label: 'Rejeitada', cls: 'bg-red-100 text-red-700' },
+  CANCELLED: { label: 'Cancelada', cls: 'bg-gray-100 text-gray-500' },
 };
 
 export default function InspecoesPage() {

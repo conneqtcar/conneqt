@@ -8,6 +8,7 @@ import {
   Request,
   UseGuards,
   Query,
+  Header,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -21,12 +22,14 @@ export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
   @Get()
+  @Header('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
   @ApiOperation({ summary: 'Buscar anúncios (marketplace público)' })
   search(@Query() dto: SearchListingsDto) {
     return this.listingsService.search(dto);
   }
 
   @Get(':id')
+  @Header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
   @ApiOperation({ summary: 'Detalhes de um anúncio com laudo' })
   findOne(@Param('id') id: string) {
     return this.listingsService.findById(id);

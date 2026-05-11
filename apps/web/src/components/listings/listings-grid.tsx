@@ -25,9 +25,10 @@ export function ListingsGrid({ featured = false, filters = {} }: ListingsGridPro
 
   if (isLoading) {
     return (
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-80 animate-pulse rounded-xl bg-gray-200" />
+          <div key={i} className="h-56 animate-pulse rounded-xl bg-gray-100" />
+        ))}
         ))}
       </div>
     );
@@ -48,9 +49,15 @@ export function ListingsGrid({ featured = false, filters = {} }: ListingsGridPro
           {data.total} veículos encontrados
         </p>
       )}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {data.data.map((listing: Record<string, unknown>) => (
-          <ListingCard key={listing.id as string} listing={listing} />
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {data.data.map((listing: Record<string, unknown>, i: number) => (
+          <div
+            key={listing.id as string}
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+          >
+            <ListingCard listing={listing} />
+          </div>
         ))}
       </div>
     </>

@@ -6,6 +6,35 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useChat } from '@/hooks/useChat';
 
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+const DEMO_MESSAGES = [
+  {
+    id: 'dm-1',
+    listingId: '',
+    senderId: 'seller-demo',
+    content: 'Olá! Obrigado pelo seu interesse. O veículo está em ótimo estado, único dono.',
+    createdAt: new Date(Date.now() - 25 * 60000).toISOString(),
+    sender: { id: 'seller-demo', name: 'Carlos Mendes', avatarUrl: null },
+  },
+  {
+    id: 'dm-2',
+    listingId: '',
+    senderId: 'buyer-demo',
+    content: 'Boa tarde Carlos! Podemos marcar uma visita ainda essa semana?',
+    createdAt: new Date(Date.now() - 18 * 60000).toISOString(),
+    sender: { id: 'buyer-demo', name: 'Você', avatarUrl: null },
+  },
+  {
+    id: 'dm-3',
+    listingId: '',
+    senderId: 'seller-demo',
+    content: 'Claro! Estou disponível quinta ou sexta a partir das 14h. Qual prefere?',
+    createdAt: new Date(Date.now() - 10 * 60000).toISOString(),
+    sender: { id: 'seller-demo', name: 'Carlos Mendes', avatarUrl: null },
+  },
+];
+
 interface ChatWindowProps {
   listingId: string;
   listingTitle: string;
@@ -18,10 +47,33 @@ export function ChatWindow({ listingId, listingTitle, sellerName, onClose }: Cha
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, connected, loading, sendMessage, currentUserId } = useChat({
-    listingId,
-    enabled: true,
-  });
+  // Demo mode: mensagens locais sem socket
+  const [demoMessages, setDemoMessages] = useState(() =>
+    DEMO_MESSAGES.map((m) => ({ ...m, listingId })),
+  );
+
+  const realChat = useChat({ listingId, enabled: !IS_DEMO });
+
+  const messages = IS_DEMO ? demoMessages : realChat.messages;
+  const connected = IS_DEMO ? true : realChat.connected;
+  const loading = IS_DEMO ? false : realChat.loading;
+  const currentUserId = IS_DEMO ? 'buyer-demo' : realChat.currentUserId;
+
+  const sendMessage = IS_DEMO
+    ? (content: string) => {
+        setDemoMessages((prev) => [
+          ...prev,
+          {
+            id: `dm-${Date.now()}`,
+            listingId,
+            senderId: 'buyer-demo',
+            content,
+            createdAt: new Date().toISOString(),
+            sender: { id: 'buyer-demo', name: 'Você', avatarUrl: null },
+          },
+        ]);
+      }
+    : realChat.sendMessage;
 
   // Auto-scroll ao receber nova mensagem
   useEffect(() => {
@@ -34,7 +86,7 @@ export function ChatWindow({ listingId, listingTitle, sellerName, onClose }: Cha
   }, []);
 
   const handleSend = () => {
-    if (!input.trim() || !connected) return;
+    if (!input.trim() || (!connected && !IS_DEMO)) return;
     sendMessage(input);
     setInput('');
     inputRef.current?.focus();
@@ -147,7 +199,7 @@ export function ChatWindow({ listingId, listingTitle, sellerName, onClose }: Cha
 
         {/* Input */}
         <div className="border-t border-gray-100 p-3">
-          {!connected && !loading && (
+          {!connected && !loading && !IS_DEMO && (
             <p className="mb-2 text-center text-xs text-red-500">
               Faça login para enviar mensagens.
             </p>
@@ -160,13 +212,13 @@ export function ChatWindow({ listingId, listingTitle, sellerName, onClose }: Cha
               onKeyDown={handleKeyDown}
               placeholder="Digite sua mensagem..."
               rows={1}
-              disabled={!connected}
+              disabled={!connected && !IS_DEMO}
               className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-blue-400 focus:ring-1 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
               style={{ maxHeight: '120px', overflowY: 'auto' }}
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || !connected}
+              disabled={!input.trim() || (!connected && !IS_DEMO)}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold text-white transition hover:bg-brand-gold-dark disabled:opacity-40 disabled:cursor-not-allowed"
               aria-label="Enviar mensagem"
             >

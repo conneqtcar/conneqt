@@ -80,8 +80,7 @@ export function useChat({ listingId, enabled = false }: UseChatOptions) {
   const sendMessage = useCallback(
     (content: string) => {
       if (!socketRef.current || !content.trim()) return;
-      const senderId = getUserId();
-      socketRef.current.emit('send_message', { listingId, content: content.trim(), senderId });
+      socketRef.current.emit('send_message', { listingId, content: content.trim() });
     },
     [listingId],
   );

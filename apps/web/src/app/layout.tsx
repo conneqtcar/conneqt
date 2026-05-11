@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { PwaRegister } from '@/components/pwa/pwa-register';
-import { InstallPrompt } from '@/components/pwa/install-prompt';
 import { BottomNav } from '@/components/mobile/bottom-nav';
 import './globals.css';
 
@@ -21,7 +20,7 @@ export const metadata: Metadata = {
     template: '%s | Conneqt',
   },
   description:
-    'Plataforma de intermediação veicular com inspeção obrigatória, laudo digital e pagamento seguro via escrow.',
+    'Plataforma de intermediação veicular com inspeção obrigatória, laudo digital e negociação segura.',
   keywords: ['comprar carro', 'vender carro', 'carros seminovos', 'verificados', 'laudo digital'],
   manifest: '/manifest.webmanifest',
   appleWebApp: {
@@ -32,10 +31,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
-      { url: '/icons/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+      { url: '/icons/logo.svg', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/icons/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' }],
+    apple: [{ url: '/icons/logo.svg', type: 'image/svg+xml' }],
+    shortcut: '/icons/logo.svg',
   },
   openGraph: {
     type: 'website',
@@ -52,7 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
           <BottomNav />
-          <InstallPrompt />
           <PwaRegister />
         </Providers>
       </body>

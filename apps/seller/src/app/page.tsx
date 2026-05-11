@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
   Car, MessageSquare, Eye, DollarSign, Plus, ArrowRight,
-  Bell, CheckCircle, Star, Megaphone, ShieldCheck, AlertCircle,
+  Bell, CheckCircle, Star, Megaphone, ShieldCheck, AlertCircle, Clock,
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -41,11 +42,14 @@ interface SellerStats {
   totalViews: number; estimatedRevenue: number;
   totalSold: number; rating: number; ratingCount: number;
 }
-interface SellerProfile { name: string }
+interface SellerProfile { name: string; kycStatus?: string }
 interface ActivityItem { id: string; type: string; title: string; description: string; createdAt: string; link: string }
 interface MyVehicle { id: string; brand: string; model: string; year: number; status: string; listing?: { price: number } | null }
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const isNewSeller = searchParams.get('cadastro') === 'pendente';
+
   const { data: stats } = useQuery<SellerStats>({
     queryKey: ['seller-stats'],
     queryFn: async () => { const { data } = await api.get('/seller/stats'); return data; },
@@ -88,6 +92,19 @@ export default function DashboardPage() {
           </p>
         )}
       </div>
+
+      {/* Banner de KYC pendente — aparece para novos vendedores aguardando aprovação */}
+      {(isNewSeller || profile?.kycStatus === 'PENDING') && (
+        <div className="mx-6 mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 md:mx-8">
+          <Clock className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
+          <div>
+            <p className="font-semibold text-amber-900">Conta em análise</p>
+            <p className="mt-0.5 text-sm text-amber-700">
+              Recebemos seu cadastro! Nossa equipe está verificando seu perfil e em breve você poderá publicar anúncios. Isso costuma levar até <strong>24 horas</strong>.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="px-6 py-6 md:px-8">
         {/* KPI cards */}
@@ -229,6 +246,17 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Mascote flutuante */}
+      <div className="pointer-events-none fixed bottom-0 right-0 z-0 hidden select-none md:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icons/mascote.svg"
+          alt=""
+          aria-hidden
+          className="h-[340px] w-auto animate-float object-contain opacity-90 drop-shadow-xl"
+        />
       </div>
     </div>
   );

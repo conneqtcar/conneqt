@@ -3,11 +3,27 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Loader2, ArrowLeft, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { CameraCapture } from '@/components/pwa/camera-capture';
+
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+// Imagens de carros reais para simular fotos em demo mode
+const DEMO_CAR_IMAGES = [
+  'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=70',
+  'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=70',
+  'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=70',
+  'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=70',
+  'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=70',
+  'https://images.unsplash.com/photo-1504215680853-026ed2a45def?w=800&q=70',
+  'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=70',
+  'https://images.unsplash.com/photo-1471479917193-f00955256257?w=800&q=70',
+  'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=70',
+  'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&q=70',
+];
 
 const UPLOAD_STEPS = [
   { label: 'Frente do veículo',       hint: 'Posicione o carro de frente, com boa iluminação' },
@@ -37,25 +53,39 @@ export default function InspecaoPage() {
   const { data: inspection, isLoading } = useQuery({
     queryKey: ['inspection', vehicleId],
     queryFn: async () => {
-      try {
-        const { data } = await api.post('/inspections', { vehicleId, type: 'REMOTE' });
-        return data;
-      } catch {
-        const { data } = await api.get(`/inspections?vehicleId=${vehicleId}`);
-        return data;
-      }
+      // GET first — reuse existing active inspection
+      const { data: existing } = await api.get<{ id: string; status: string }[]>(
+        `/inspections?vehicleId=${vehicleId}`,
+      );
+      const active = Array.isArray(existing)
+        ? existing.find((i) => i.status !== 'APPROVED' && i.status !== 'REJECTED' && i.status !== 'CANCELLED')
+        : null;
+      if (active) return active;
+      // No active inspection found — create one
+      const { data } = await api.post('/inspections', { vehicleId, type: 'REMOTE' });
+      return data;
     },
     retry: false,
   });
 
   const handleCapture = async (file: File) => {
-    if (!inspection?.id) return;
+    if (!inspection?.id && !IS_DEMO) return;
     const stepIndex = currentStep;
+
+    // Demo mode: simula upload com delay visual
+    if (IS_DEMO) {
+      setUploading(true);
+      await new Promise((r) => setTimeout(r, 600));
+      setCurrentStep((s) => s + 1);
+      toast.success(`✓ ${UPLOAD_STEPS[stepIndex].label}`);
+      setUploading(false);
+      return;
+    }
 
     setUploading(true);
     try {
       const { data: urlData }: { data: UploadUrlResponse } = await api.post(
-        `/inspections/${inspection.id}/upload-url`,
+        `/inspections/${inspection!.id}/upload-url`,
         {
           fileName: file.name,
           contentType: file.type,
@@ -69,7 +99,7 @@ export default function InspecaoPage() {
         headers: { 'Content-Type': file.type },
       });
 
-      await api.post(`/inspections/${inspection.id}/media`, {
+      await api.post(`/inspections/${inspection!.id}/media`, {
         url: urlData.publicUrl,
         type: 'PHOTO',
         label: UPLOAD_STEPS[stepIndex].label,
@@ -85,9 +115,31 @@ export default function InspecaoPage() {
     }
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const finishInspection = async () => {
-    toast.success('Inspeção enviada para análise!');
-    router.push('/');
+    setSubmitting(true);
+    if (IS_DEMO) {
+      await new Promise((r) => setTimeout(r, 800));
+      toast.success('Inspeção enviada! Score IA: 92/100 ✅');
+      router.push('/');
+      setSubmitting(false);
+      return;
+    }
+    if (!inspection?.id) return;
+    try {
+      await api.patch(`/inspections/${inspection.id}/submit-media`);
+      toast.success('Inspeção enviada para análise!');
+      router.push('/');
+    } catch {
+      try {
+        await api.patch(`/inspections/${inspection.id}/status`, { status: 'AWAITING_REVIEW' });
+      } catch { /* best-effort */ }
+      toast.success('Inspeção enviada para análise!');
+      router.push('/');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const allDone = currentStep >= UPLOAD_STEPS.length;
@@ -132,13 +184,49 @@ export default function InspecaoPage() {
                 <span className="text-sm font-medium">Enviando foto...</span>
               </div>
             )}
-            <CameraCapture
-              label={UPLOAD_STEPS[currentStep].label}
-              hint={UPLOAD_STEPS[currentStep].hint}
-              step={currentStep + 1}
-              onCapture={handleCapture}
-              disabled={uploading || isLoading}
-            />
+
+            {IS_DEMO ? (
+              /* ── Demo mode: botão "Simular foto" sem câmera real ── */
+              <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+                <div className="relative h-52 w-full bg-gray-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={DEMO_CAR_IMAGES[currentStep % DEMO_CAR_IMAGES.length]}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                    <Camera className="h-10 w-10 text-white/70" />
+                    <p className="mt-2 text-sm font-medium text-white/80">Prévia da foto</p>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold text-xs font-bold text-white">
+                      {currentStep + 1}
+                    </span>
+                    <p className="font-semibold text-gray-900">{UPLOAD_STEPS[currentStep].label}</p>
+                  </div>
+                  <p className="mb-4 text-sm text-gray-500">{UPLOAD_STEPS[currentStep].hint}</p>
+                  <button
+                    onClick={() => handleCapture(new File([], 'demo.jpg', { type: 'image/jpeg' }))}
+                    disabled={uploading}
+                    className="w-full rounded-xl bg-brand-gold py-3.5 font-semibold text-white transition hover:bg-brand-gold-dark active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Simular foto tirada
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <CameraCapture
+                label={UPLOAD_STEPS[currentStep].label}
+                hint={UPLOAD_STEPS[currentStep].hint}
+                step={currentStep + 1}
+                onCapture={handleCapture}
+                disabled={uploading || isLoading}
+              />
+            )}
           </>
         )}
 
@@ -183,8 +271,10 @@ export default function InspecaoPage() {
             </p>
             <button
               onClick={finishInspection}
-              className="mt-6 w-full rounded-xl bg-green-600 py-3.5 font-semibold text-white hover:bg-green-700 active:scale-95 transition-transform"
+              disabled={submitting}
+              className="mt-6 w-full rounded-xl bg-green-600 py-3.5 font-semibold text-white hover:bg-green-700 active:scale-95 transition-transform disabled:opacity-70 flex items-center justify-center gap-2"
             >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               Enviar para análise
             </button>
           </div>

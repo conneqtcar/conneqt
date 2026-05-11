@@ -118,24 +118,28 @@ export class ListingsService {
           include: {
             inspections: {
               where: { status: 'APPROVED' },
-              include: { media: true, items: true },
+              include: {
+                // Apenas fotos, sem vídeos pesados no primeiro load
+                media: { where: { type: 'PHOTO' }, orderBy: { createdAt: 'asc' } },
+                // Limite de 50 itens (suficiente para exibir o laudo completo)
+                items: { orderBy: [{ category: 'asc' }, { item: 'asc' }], take: 50 },
+              },
               take: 1,
             },
           },
         },
         seller: { select: { id: true, name: true, kycStatus: true, phone: true } },
-        proposals: { where: { status: 'PENDING' }, select: { id: true } },
+        // Apenas contagem de propostas pendentes, sem materializar os registros
         _count: { select: { proposals: true } },
       },
     });
 
     if (!listing) throw new NotFoundException('Anúncio não encontrado.');
 
-    // Incrementa contador de visualizações
-    await this.prisma.listing.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Incrementa visualizações de forma assíncrona (fire-and-forget) — não bloqueia a resposta
+    this.prisma.listing
+      .update({ where: { id }, data: { views: { increment: 1 } } })
+      .catch(() => undefined);
 
     return listing;
   }

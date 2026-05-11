@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Conneqt — Compra e Venda de Veículos',
     short_name: 'Conneqt',
     description:
-      'Plataforma de intermediação veicular com inspeção obrigatória, laudo digital e pagamento seguro via escrow.',
+      'Plataforma de intermediação veicular com inspeção obrigatória, laudo digital e negociação segura.',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
@@ -15,20 +15,14 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'pt-BR',
     icons: [
       {
-        src: '/icons/icon-192.svg',
-        sizes: '192x192',
+        src: '/icons/logo.svg',
+        sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'any',
       },
       {
-        src: '/icons/icon-512.svg',
-        sizes: '512x512',
-        type: 'image/svg+xml',
-        purpose: 'any',
-      },
-      {
-        src: '/icons/icon-maskable.svg',
-        sizes: '512x512',
+        src: '/icons/logo.svg',
+        sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'maskable',
       },

@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = 'conneqtcar-v1';
+const CACHE_NAME = 'conneqtcar-v2';
 const OFFLINE_URL = '/offline';
 
 // Assets para pré-cachear na instalação
@@ -57,8 +57,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ── Next.js/_next/static: cache-first (assets imutáveis) ─────────────────────
+  // ── Next.js/_next/static: network-first para JS/CSS, cache-first para fontes ──
   if (url.pathname.startsWith('/_next/static/')) {
+    // Chunks JS e CSS mudam a cada build — buscar sempre da rede primeiro
+    if (request.destination === 'script' || request.destination === 'style') {
+      event.respondWith(
+        fetch(request).then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        }).catch(() => caches.match(request)),
+      );
+      return;
+    }
+    // Demais assets (imagens, fontes no static): cache-first
     event.respondWith(
       caches.match(request).then(
         (cached) =>

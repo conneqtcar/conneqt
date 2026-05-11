@@ -1,47 +1,39 @@
 'use client';
 
-import { Shield, FileCheck, Lock, Star, ArrowRight } from 'lucide-react';
+import { Shield, FileCheck, MessageCircle, Star, ChevronRight } from 'lucide-react';
 import { useInView } from '@/hooks/useInView';
 
-const badges = [
+const steps = [
   {
     icon: Shield,
     title: 'Inspeção Obrigatória',
-    description: 'Todo veículo é inspecionado por nossa IA antes de ser publicado na plataforma.',
+    description: 'IA inspeciona cada veículo antes da publicação',
     color: 'text-brand-gold',
-    iconBg: 'bg-amber-100',
-    border: 'hover:border-blue-200',
-    glow: 'hover:shadow-blue-100',
+    iconBg: 'bg-amber-50',
     number: '01',
   },
   {
     icon: FileCheck,
     title: 'Laudo Digital',
-    description: 'Documento verificável com score de condição 0–100 e hash anti-adulteração.',
+    description: 'Score 0–100 com hash anti-adulteração',
     color: 'text-emerald-600',
-    iconBg: 'bg-emerald-100',
-    border: 'hover:border-emerald-200',
-    glow: 'hover:shadow-emerald-100',
+    iconBg: 'bg-emerald-50',
     number: '02',
   },
   {
-    icon: Lock,
-    title: 'Pagamento Escrow',
-    description: 'O vendedor recebe apenas após confirmação da entrega e documentação.',
-    color: 'text-violet-600',
-    iconBg: 'bg-violet-100',
-    border: 'hover:border-violet-200',
-    glow: 'hover:shadow-violet-100',
+    icon: MessageCircle,
+    title: 'Negociação Direta',
+    description: 'Chat integrado entre comprador e vendedor',
+    color: 'text-blue-600',
+    iconBg: 'bg-blue-50',
     number: '03',
   },
   {
     icon: Star,
     title: 'Contrato Digital',
-    description: 'Assinatura eletrônica com validade jurídica ICP-Brasil.',
+    description: 'Assinatura eletrônica ICP-Brasil',
     color: 'text-amber-600',
-    iconBg: 'bg-amber-100',
-    border: 'hover:border-amber-200',
-    glow: 'hover:shadow-amber-100',
+    iconBg: 'bg-amber-50',
     number: '04',
   },
 ];
@@ -52,49 +44,43 @@ export function TrustBadges() {
   return (
     <section
       ref={ref as React.RefObject<HTMLElement>}
-      className="bg-white py-20"
+      className="bg-white py-10 border-b border-gray-100"
     >
       <div className="mx-auto max-w-7xl px-6 md:px-12">
-        {/* Header */}
-        <div
-          className={`mb-14 text-center in-view-hidden ${isVisible ? 'is-visible' : ''}`}
-        >
-          <span className="inline-block rounded-full bg-amber-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-gold">
+        {/* Header compacto */}
+        <div className={`mb-6 flex items-center gap-3 in-view-hidden ${isVisible ? 'is-visible' : ''}`}>
+          <span className="inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-brand-gold">
             Por que a Conneqt?
           </span>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">
-            Segurança em cada etapa
-          </h2>
-          <p className="mt-3 text-gray-400 md:text-lg">
-            Desenvolvemos um processo completo para proteger compradores e vendedores.
-          </p>
+          <span className="text-sm text-gray-400">Segurança em cada etapa do processo</span>
         </div>
 
-        {/* Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {badges.map((badge, i) => (
+        {/* Steps lineares */}
+        <div className="flex flex-col sm:flex-row items-stretch gap-0">
+          {steps.map((step, i) => (
             <div
-              key={badge.title}
-              className={`group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${badge.border} ${badge.glow} in-view-hidden ${isVisible ? 'is-visible' : ''}`}
-              style={{ transitionDelay: `${i * 120}ms` }}
+              key={step.title}
+              className={`flex flex-1 items-center in-view-hidden ${isVisible ? 'is-visible' : ''}`}
+              style={{ transitionDelay: `${i * 100}ms` }}
             >
-              {/* Number watermark */}
-              <span className="absolute right-4 top-3 font-mono text-5xl font-extrabold text-gray-50 select-none">
-                {badge.number}
-              </span>
-
-              {/* Icon */}
-              <div className={`mb-5 inline-flex rounded-xl ${badge.iconBg} p-3`}>
-                <badge.icon className={`h-6 w-6 ${badge.color}`} />
+              {/* Step */}
+              <div className="flex flex-1 items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/60 px-4 py-3 transition-all duration-200 hover:bg-white hover:shadow-md hover:border-gray-200">
+                <div className={`shrink-0 inline-flex rounded-lg ${step.iconBg} p-2`}>
+                  <step.icon className={`h-5 w-5 ${step.color}`} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-[10px] font-bold text-gray-300">{step.number}</span>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{step.title}</p>
+                  </div>
+                  <p className="text-xs text-gray-400 leading-snug mt-0.5">{step.description}</p>
+                </div>
               </div>
 
-              <h3 className="mb-2 font-bold text-gray-900">{badge.title}</h3>
-              <p className="text-sm leading-relaxed text-gray-500">{badge.description}</p>
-
-              {/* Arrow hover */}
-              <div className={`mt-4 flex items-center gap-1 text-xs font-semibold opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${badge.color}`}>
-                Saiba mais <ArrowRight className="h-3 w-3" />
-              </div>
+              {/* Seta de conexão */}
+              {i < steps.length - 1 && (
+                <ChevronRight className="mx-1 h-4 w-4 shrink-0 text-gray-300 hidden sm:block" />
+              )}
             </div>
           ))}
         </div>

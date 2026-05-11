@@ -1,7 +1,13 @@
 'use client';
 
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Loader2, Plus, X, Car, XCircle, Upload, Play, Star, ChevronRight,
+} from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -21,8 +27,473 @@ const statusLabels: Record<string, { label: string; cls: string }> = {
   INACTIVE: { label: 'Inativo', cls: 'bg-red-100 text-red-700' },
 };
 
+// ─── Form schema ───────────────────────────────────────────────────────────────
+const schema = z.object({
+  brand: z.string().min(1, 'Obrigatório'),
+  model: z.string().min(1, 'Obrigatório'),
+  year: z.coerce
+    .number()
+    .int()
+    .min(1950, 'Ano inválido')
+    .max(new Date().getFullYear() + 1, 'Ano inválido'),
+  color: z.string().min(1, 'Obrigatório'),
+  mileage: z.coerce.number().int().min(0, 'Inválido'),
+  fuelType: z.enum(['FLEX', 'GASOLINE', 'DIESEL', 'ELECTRIC', 'HYBRID'], { message: 'Obrigatório' }),
+  transmission: z.enum(['MANUAL', 'AUTOMATIC', 'CVT', 'SEMI_AUTO'], { message: 'Obrigatório' }),
+  bodyType: z.string().optional(),
+  doors: z.coerce.number().int().optional(),
+  plate: z.string().optional(),
+  chassis: z.string().optional(),
+  renavam: z.string().optional(),
+  price: z.coerce.number().min(1, 'Preço obrigatório'),
+  description: z.string().optional(),
+  acceptsFinancing: z.boolean().default(false),
+  acceptsTrade: z.boolean().default(false),
+  sellerEmail: z.string().optional(),
+});
+type FormData = z.infer<typeof schema>;
+
+interface MediaFile { file: File; preview: string; isVideo: boolean }
+
+const STEP1_FIELDS: (keyof FormData)[] = ['brand', 'model', 'year', 'color', 'mileage', 'fuelType', 'transmission'];
+const STEP2_FIELDS: (keyof FormData)[] = ['price'];
+
+// ─── Modal ─────────────────────────────────────────────────────────────────────
+function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [media, setMedia] = useState<MediaFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { register, handleSubmit, trigger, watch, setValue, formState: { errors } } =
+    useForm<FormData>({
+      resolver: zodResolver(schema),
+      defaultValues: { acceptsFinancing: false, acceptsTrade: false },
+    });
+
+  const acceptsFinancing = watch('acceptsFinancing');
+  const acceptsTrade = watch('acceptsTrade');
+
+  const mutation = useMutation({
+    mutationFn: (data: FormData) =>
+      api.post('/admin/listings', {
+        ...data,
+        photoUrls: media.slice(0, 20).map((m) => m.preview),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
+      toast.success('Anúncio publicado com sucesso!');
+      onClose();
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Erro ao publicar anúncio.';
+      toast.error(msg);
+    },
+  });
+
+  const addFiles = useCallback(
+    (files: FileList | null) => {
+      if (!files) return;
+      const allowed = Array.from(files).filter(
+        (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+      );
+      const toAdd = allowed.slice(0, 20 - media.length).map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+        isVideo: file.type.startsWith('video/'),
+      }));
+      setMedia((prev) => [...prev, ...toAdd]);
+    },
+    [media.length],
+  );
+
+  const removeFile = (idx: number) => {
+    setMedia((prev) => {
+      URL.revokeObjectURL(prev[idx].preview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const goNext = async () => {
+    const ok = await trigger(step === 1 ? STEP1_FIELDS : STEP2_FIELDS);
+    if (ok) setStep((s) => (s + 1) as 1 | 2 | 3);
+  };
+
+  const fi = 'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20';
+  const la = 'block text-sm font-medium text-gray-700';
+  const er = 'mt-1 text-xs text-red-600';
+  const titles = ['Dados do veículo', 'Dados do anúncio', 'Fotos e mídias'];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8 backdrop-blur-sm">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold/10">
+              <Car className="h-4 w-4 text-brand-gold" />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900">Novo anúncio</h2>
+              <p className="text-xs text-gray-400">{titles[step - 1]}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Step indicators */}
+        <div className="flex items-center gap-1 border-b border-gray-100 px-6 py-3">
+          {([1, 2, 3] as const).map((s) => (
+            <div key={s} className="flex items-center gap-1.5">
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                  step === s
+                    ? 'bg-brand-gold text-white'
+                    : step > s
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-100 text-gray-400'
+                }`}
+              >
+                {step > s ? '✓' : s}
+              </div>
+              <span className={`text-xs ${ step >= s ? 'font-medium text-gray-700' : 'text-gray-400'}`}>
+                {titles[s - 1]}
+              </span>
+              {s < 3 && <ChevronRight className="mx-1 h-3 w-3 text-gray-300" />}
+            </div>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="max-h-[62vh] overflow-y-auto px-6 py-5">
+
+          {/* ── Step 1: Veículo ─────────────────────────── */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={la}>Marca *</label>
+                  <input {...register('brand')} type="text" placeholder="Toyota" className={fi} />
+                  {errors.brand && <p className={er}>{errors.brand.message}</p>}
+                </div>
+                <div>
+                  <label className={la}>Modelo *</label>
+                  <input {...register('model')} type="text" placeholder="Corolla" className={fi} />
+                  {errors.model && <p className={er}>{errors.model.message}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className={la}>Ano *</label>
+                  <input {...register('year')} type="number" placeholder="2023" min={1950}
+                    max={new Date().getFullYear() + 1} className={fi} />
+                  {errors.year && <p className={er}>{errors.year.message}</p>}
+                </div>
+                <div>
+                  <label className={la}>Cor *</label>
+                  <input {...register('color')} type="text" placeholder="Branco" className={fi} />
+                  {errors.color && <p className={er}>{errors.color.message}</p>}
+                </div>
+                <div>
+                  <label className={la}>Quilometragem *</label>
+                  <input {...register('mileage')} type="number" placeholder="45000" min={0} className={fi} />
+                  {errors.mileage && <p className={er}>{errors.mileage.message}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={la}>Combustível *</label>
+                  <select {...register('fuelType')} className={fi}>
+                    <option value="">Selecione...</option>
+                    <option value="FLEX">Flex</option>
+                    <option value="GASOLINE">Gasolina</option>
+                    <option value="DIESEL">Diesel</option>
+                    <option value="ELECTRIC">Elétrico</option>
+                    <option value="HYBRID">Híbrido</option>
+                  </select>
+                  {errors.fuelType && <p className={er}>{errors.fuelType.message}</p>}
+                </div>
+                <div>
+                  <label className={la}>Câmbio *</label>
+                  <select {...register('transmission')} className={fi}>
+                    <option value="">Selecione...</option>
+                    <option value="MANUAL">Manual</option>
+                    <option value="AUTOMATIC">Automático</option>
+                    <option value="CVT">CVT</option>
+                    <option value="SEMI_AUTO">Semi-automático</option>
+                  </select>
+                  {errors.transmission && <p className={er}>{errors.transmission.message}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={la}>Carroceria</label>
+                  <select {...register('bodyType')} className={fi}>
+                    <option value="">Selecione...</option>
+                    <option value="HATCH">Hatchback</option>
+                    <option value="SEDAN">Sedan</option>
+                    <option value="SUV">SUV</option>
+                    <option value="PICKUP">Picape</option>
+                    <option value="CONVERTIBLE">Conversível</option>
+                    <option value="MINIVAN">Minivan</option>
+                    <option value="WAGON">Station Wagon</option>
+                    <option value="COUPE">Cupê</option>
+                    <option value="VAN">Van / Utilitário</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={la}>Portas</label>
+                  <select {...register('doors')} className={fi}>
+                    <option value="">Selecione...</option>
+                    <option value="2">2 portas</option>
+                    <option value="4">4 portas</option>
+                  </select>
+                </div>
+              </div>
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Identificação (opcional)</p>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className={la}>Placa</label>
+                  <input
+                    {...register('plate')}
+                    type="text"
+                    placeholder="ABC1D23"
+                    maxLength={8}
+                    className={`${fi} uppercase`}
+                    onInput={(e) => {
+                      const t = e.target as HTMLInputElement;
+                      t.value = t.value.toUpperCase();
+                    }}
+                  />
+                </div>
+                <div>
+                  <label className={la}>Chassi</label>
+                  <input {...register('chassis')} type="text" placeholder="9BWZZZ..." maxLength={17}
+                    className={`${fi} font-mono uppercase`} />
+                </div>
+                <div>
+                  <label className={la}>RENAVAM</label>
+                  <input {...register('renavam')} type="text" placeholder="12345678901" maxLength={11}
+                    className={`${fi} font-mono`} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: Anúncio ─────────────────────────── */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div>
+                <label className={la}>Preço de venda *</label>
+                <div className="relative mt-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">R$</span>
+                  <input
+                    {...register('price')}
+                    type="number"
+                    min={1}
+                    step={100}
+                    placeholder="89900"
+                    className={`${fi} pl-9`}
+                  />
+                </div>
+                {errors.price && <p className={er}>{errors.price.message}</p>}
+              </div>
+
+              <div>
+                <label className={la}>Descrição</label>
+                <textarea
+                  {...register('description')}
+                  rows={4}
+                  placeholder="Descreva detalhes do veículo, histórico de revisões, estado geral..."
+                  className={`${fi} resize-none`}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setValue('acceptsFinancing', !acceptsFinancing)}
+                  className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-colors ${
+                    acceptsFinancing ? 'border-brand-gold bg-brand-gold/5' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 ${
+                    acceptsFinancing ? 'border-brand-gold bg-brand-gold' : 'border-gray-300'
+                  }`}>
+                    {acceptsFinancing && <span className="text-xs font-bold text-white">✓</span>}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Aceita financiamento</p>
+                    <p className="text-xs text-gray-500">Comprador pode financiar</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('acceptsTrade', !acceptsTrade)}
+                  className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-colors ${
+                    acceptsTrade ? 'border-brand-gold bg-brand-gold/5' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 ${
+                    acceptsTrade ? 'border-brand-gold bg-brand-gold' : 'border-gray-300'
+                  }`}>
+                    {acceptsTrade && <span className="text-xs font-bold text-white">✓</span>}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Aceita troca</p>
+                    <p className="text-xs text-gray-500">Troca por outro veículo</p>
+                  </div>
+                </button>
+              </div>
+
+              <div>
+                <label className={la}>
+                  E-mail do vendedor{' '}
+                  <span className="font-normal text-gray-400">(opcional)</span>
+                </label>
+                <input
+                  {...register('sellerEmail')}
+                  type="email"
+                  placeholder="vendedor@email.com"
+                  className={fi}
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  Se vazio, o anúncio ficará como publicação da plataforma.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 3: Mídias ──────────────────────────── */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Adicione até <strong>20 fotos ou vídeos</strong>. A primeira imagem será a{' '}
+                <strong>foto de capa</strong> do anúncio.
+              </p>
+
+              {/* Drop zone */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); }}
+                onClick={() => inputRef.current?.click()}
+                className={`cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
+                  isDragging
+                    ? 'border-brand-gold bg-brand-gold/5'
+                    : 'border-gray-300 hover:border-brand-gold hover:bg-gray-50'
+                }`}
+              >
+                <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                <p className="mt-2 text-sm font-medium text-gray-700">Arraste fotos e vídeos aqui</p>
+                <p className="mt-1 text-xs text-gray-400">ou clique para selecionar · JPG, PNG, WEBP, MP4, MOV</p>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  className="hidden"
+                  onChange={(e) => addFiles(e.target.files)}
+                />
+              </div>
+
+              {/* Preview grid */}
+              {media.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {media.map((m, i) => (
+                    <div key={i} className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
+                      {m.isVideo ? (
+                        <div className="flex h-full items-center justify-center bg-gray-800">
+                          <Play className="h-8 w-8 text-white" />
+                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white">Vídeo</span>
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.preview} alt="" className="h-full w-full object-cover" />
+                      )}
+                      {i === 0 && (
+                        <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-brand-gold/90 px-1.5 py-0.5 text-xs font-medium text-white">
+                          <Star className="h-3 w-3" /> Capa
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+                        className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-0.5 text-white hover:bg-black/80 group-hover:flex"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {media.length < 20 && (
+                    <button
+                      type="button"
+                      onClick={() => inputRef.current?.click()}
+                      className="aspect-[4/3] rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-brand-gold hover:bg-gray-50"
+                    >
+                      <Plus className="h-6 w-6 text-gray-400" />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {media.length === 0 && (
+                <p className="text-center text-xs text-gray-400">
+                  Nenhuma mídia adicionada — o anúncio pode ser publicado sem fotos.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+          <button
+            type="button"
+            onClick={step === 1 ? onClose : () => setStep((s) => (s - 1) as 1 | 2 | 3)}
+            className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+          >
+            {step === 1 ? 'Cancelar' : '← Voltar'}
+          </button>
+          {step < 3 ? (
+            <button
+              type="button"
+              onClick={goNext}
+              className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark"
+            >
+              Próximo <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit((d) => mutation.mutate(d))}
+              disabled={mutation.isPending}
+              className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark disabled:opacity-70"
+            >
+              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Publicar anúncio
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
 export default function AnunciosPage() {
   const qc = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
 
   const { data = [], isLoading } = useQuery<Listing[]>({
     queryKey: ['admin-listings'],
@@ -33,7 +504,7 @@ export default function AnunciosPage() {
   });
 
   const deactivate = useMutation({
-    mutationFn: (id: string) => api.delete(`/listings/${id}`),
+    mutationFn: (id: string) => api.patch(`/admin/listings/${id}/deactivate`),
     onSuccess: () => {
       toast.success('Anúncio desativado.');
       qc.invalidateQueries({ queryKey: ['admin-listings'] });
@@ -43,8 +514,19 @@ export default function AnunciosPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Anúncios</h1>
-      <p className="mt-1 text-gray-500">Todos os anúncios publicados na plataforma</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Anúncios</h1>
+          <p className="mt-1 text-gray-500">Todos os anúncios publicados na plataforma</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 rounded-xl bg-brand-gold px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-gold-dark"
+        >
+          <Plus className="h-4 w-4" />
+          Novo anúncio
+        </button>
+      </div>
 
       <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
         {isLoading ? (

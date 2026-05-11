@@ -31,6 +31,9 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
+    // Vendedores entram com KYC pendente até análise; compradores ficam ativos imediatamente
+    const kycStatus = dto.role === 'SELLER' ? 'PENDING' : 'NOT_SUBMITTED';
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -38,6 +41,7 @@ export class AuthService {
         name: dto.name,
         phone: dto.phone,
         type: dto.type ?? 'PF',
+        kycStatus,
       },
       select: {
         id: true,

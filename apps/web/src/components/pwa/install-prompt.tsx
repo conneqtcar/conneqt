@@ -69,7 +69,7 @@ export function InstallPrompt() {
           {/* Ícone */}
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-gold">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/icon-192.svg" alt="Conneqt" className="h-8 w-8" />
+            <img src="/icons/logo.svg" alt="Conneqt" className="h-8 w-8" />
           </div>
 
           {/* Texto */}

@@ -287,41 +287,65 @@ export const MOCK_MY_PROPOSALS = [
     id: 'prop-1',
     status: 'PENDING',
     amount: 85000,
+    listingId: 'mock-1',
     message: 'Olá! Tenho interesse no veículo. Poderia me dar mais detalhes sobre o histórico de manutenção? Tenho o valor em mãos para fechar rapidamente.',
     createdAt: '2026-04-21T09:00:00Z',
     buyer: { id: 'b1', name: 'Rafael Souza', avatar: 'https://picsum.photos/seed/buyer-rafael/100/100', phone: '(11) 97777-8888' },
-    listing: { id: 'mock-1', title: 'Toyota Corolla 2022 — 32.000 km', price: 89900 },
-    vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+    listing: {
+      id: 'mock-1',
+      title: 'Toyota Corolla 2022 — 32.000 km',
+      price: 89900,
+      vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+      seller: { name: 'Carlos Mendes' },
+    },
   },
   {
     id: 'prop-2',
     status: 'PENDING',
     amount: 87500,
+    listingId: 'mock-2',
     message: 'Tenho interesse. Aceita parcelamento no cartão ou é somente à vista e financiamento?',
     createdAt: '2026-04-20T15:30:00Z',
     buyer: { id: 'b2', name: 'Fernanda Melo', avatar: 'https://picsum.photos/seed/buyer-fernanda/100/100', phone: '(21) 96666-5555' },
-    listing: { id: 'mock-1', title: 'Toyota Corolla 2022 — 32.000 km', price: 89900 },
-    vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+    listing: {
+      id: 'mock-2',
+      title: 'Honda Civic EXL 2021 — 41.000 km',
+      price: 112000,
+      vehicle: { brand: 'Honda', model: 'Civic', year: 2021 },
+      seller: { name: 'Ana Paula' },
+    },
   },
   {
     id: 'prop-3',
     status: 'ACCEPTED',
     amount: 89900,
+    listingId: 'mock-1',
     message: 'Topei o valor pedido! Quando podemos fazer a vistoria presencial?',
     createdAt: '2026-04-18T11:00:00Z',
     buyer: { id: 'b3', name: 'Lucas Pereira', avatar: 'https://picsum.photos/seed/buyer-lucas/100/100', phone: '(31) 95555-4444' },
-    listing: { id: 'mock-1', title: 'Toyota Corolla 2022 — 32.000 km', price: 89900 },
-    vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+    listing: {
+      id: 'mock-1',
+      title: 'Toyota Corolla 2022 — 32.000 km',
+      price: 89900,
+      vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+      seller: { name: 'Carlos Mendes' },
+    },
   },
   {
     id: 'prop-4',
     status: 'REJECTED',
     amount: 72000,
+    listingId: 'mock-3',
     message: 'Tenho 72 mil à vista, pago hoje.',
     createdAt: '2026-04-16T08:00:00Z',
     buyer: { id: 'b4', name: 'Juliana Castro', avatar: 'https://picsum.photos/seed/buyer-juliana/100/100', phone: '(85) 94444-3333' },
-    listing: { id: 'mock-1', title: 'Toyota Corolla 2022 — 32.000 km', price: 89900 },
-    vehicle: { brand: 'Toyota', model: 'Corolla', year: 2022 },
+    listing: {
+      id: 'mock-3',
+      title: 'Hyundai HB20 2023 — 12.000 km',
+      price: 78000,
+      vehicle: { brand: 'Hyundai', model: 'HB20', year: 2023 },
+      seller: { name: 'Marcos Lima' },
+    },
   },
   {
     id: 'prop-5',
@@ -373,7 +397,33 @@ export const MOCK_SELLER_PROFILE = {
 
 // ─── MOCK ROUTER ────────────────────────────────────────────────────────────
 
-function getMockData(url: string, method: string): unknown {
+function getMockData(url: string, method: string, body?: Record<string, unknown>): unknown {
+  // Auth
+  if (url.includes('/auth/register') && method === 'post') {
+    const role = (body?.role as string) ?? 'BUYER';
+    const kycStatus = role === 'SELLER' ? 'PENDING' : 'NOT_SUBMITTED';
+    const userId = `demo-${Date.now()}`;
+    return {
+      accessToken: 'demo-access-token-' + userId,
+      refreshToken: 'demo-refresh-token-' + userId,
+      user: {
+        id: userId,
+        name: body?.name ?? 'Usuário Demo',
+        email: body?.email ?? 'demo@conneqt.com',
+        type: 'PF',
+        kycStatus,
+        status: 'ACTIVE',
+      },
+    };
+  }
+  if (url.includes('/auth/login') && method === 'post') {
+    return {
+      accessToken: 'demo-access-token',
+      refreshToken: 'demo-refresh-token',
+      user: { id: 'demo-user', name: 'Usuário Demo', email: body?.email ?? 'demo@conneqt.com', type: 'PF', kycStatus: 'NOT_SUBMITTED', status: 'ACTIVE' },
+    };
+  }
+
   // Seller endpoints
   if (url.includes('/seller/profile') && method === 'get') return MOCK_SELLER_PROFILE;
   if (url.includes('/seller/profile') && method === 'patch') return { success: true };
@@ -414,7 +464,13 @@ export function demoAdapter(
 ): Promise<AxiosResponse> {
   const url = config.url ?? '';
   const method = (config.method ?? 'get').toLowerCase();
-  const data = getMockData(url, method);
+  let body: Record<string, unknown> | undefined;
+  try {
+    body = config.data ? (typeof config.data === 'string' ? JSON.parse(config.data) : config.data) : undefined;
+  } catch {
+    body = undefined;
+  }
+  const data = getMockData(url, method, body);
 
   return Promise.resolve({
     data,
