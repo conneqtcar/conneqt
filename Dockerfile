@@ -19,10 +19,7 @@ RUN pnpm install \
     --ignore-scripts \
     --no-frozen-lockfile
 
-# Copia o cliente Prisma pré-gerado (já inclui binários linux-musl e debian)
-COPY packages/database/src/generated packages/database/src/generated
-
-# Copia os dist pré-compilados
+# Copia os dist pré-compilados (dist/generated inclui o cliente Prisma para runtime)
 COPY packages/database/dist packages/database/dist
 COPY apps/api/dist apps/api/dist
 
