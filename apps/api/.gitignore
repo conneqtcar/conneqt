@@ -1,0 +1,4 @@
+# Ignora tudo exceto dist/ (necessário para deploy no Render sem compilar)
+node_modules/
+*.log
+*.tsbuildinfo

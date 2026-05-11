@@ -1,0 +1,111 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.InspectionsController = void 0;
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const inspections_service_1 = require("./inspections.service");
+const create_inspection_dto_1 = require("./dto/create-inspection.dto");
+const submit_media_dto_1 = require("./dto/submit-media.dto");
+const review_inspection_dto_1 = require("./dto/review-inspection.dto");
+const get_upload_url_dto_1 = require("./dto/get-upload-url.dto");
+let InspectionsController = class InspectionsController {
+    inspectionsService;
+    constructor(inspectionsService) {
+        this.inspectionsService = inspectionsService;
+    }
+    create(req, dto) {
+        return this.inspectionsService.create(req.user.sub, dto);
+    }
+    getUploadUrl(id, req, dto) {
+        return this.inspectionsService.getUploadUrl(id, req.user.sub, dto.fileName, dto.mimeType);
+    }
+    submitMedia(id, req, dto) {
+        return this.inspectionsService.submitMedia(id, req.user.sub, dto);
+    }
+    getQueue(page = 1, limit = 20) {
+        return this.inspectionsService.getPendingReviewQueue(+page, +limit);
+    }
+    getStatus(id) {
+        return this.inspectionsService.getStatus(id);
+    }
+    review(id, req, dto) {
+        return this.inspectionsService.reviewByAdmin(id, req.user.sub, dto);
+    }
+};
+exports.InspectionsController = InspectionsController;
+__decorate([
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Iniciar nova inspeção para um veículo' }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, create_inspection_dto_1.CreateInspectionDto]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)(':id/upload-url'),
+    (0, swagger_1.ApiOperation)({ summary: 'Obter URL pré-assinada para upload de mídia' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, get_upload_url_dto_1.GetUploadUrlDto]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "getUploadUrl", null);
+__decorate([
+    (0, common_1.Post)(':id/media'),
+    (0, swagger_1.ApiOperation)({ summary: 'Registrar mídias enviadas para a inspeção' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, submit_media_dto_1.SubmitMediaDto]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "submitMedia", null);
+__decorate([
+    (0, common_1.Get)('queue'),
+    (0, swagger_1.ApiOperation)({ summary: 'Fila de inspeções aguardando revisão humana (admin)' }),
+    __param(0, (0, common_1.Query)('page')),
+    __param(1, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "getQueue", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Status e detalhes de uma inspeção' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "getStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id/review'),
+    (0, swagger_1.ApiOperation)({ summary: 'Revisar inspeção (admin/revisor)' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, review_inspection_dto_1.ReviewInspectionDto]),
+    __metadata("design:returntype", void 0)
+], InspectionsController.prototype, "review", null);
+exports.InspectionsController = InspectionsController = __decorate([
+    (0, swagger_1.ApiTags)('inspections'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Controller)('inspections'),
+    __metadata("design:paramtypes", [inspections_service_1.InspectionsService])
+], InspectionsController);

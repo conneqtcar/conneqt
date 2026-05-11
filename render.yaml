@@ -20,8 +20,7 @@ services:
     buildCommand: >-
       npm install -g pnpm@9 &&
       pnpm install --filter @conneqtcar/api... --filter @conneqtcar/database --no-frozen-lockfile --ignore-scripts &&
-      cd packages/database && ../../node_modules/.bin/prisma generate && node --max-old-space-size=1500 ../../node_modules/.bin/tsc --project tsconfig.json && cd ../.. &&
-      cd apps/api && node --max-old-space-size=1500 ../../node_modules/.bin/tsc --project tsconfig.build.json
+      cd packages/database && ../../node_modules/.bin/prisma generate
     startCommand: node apps/api/dist/main.js
     healthCheckPath: /api/v1/health
     autoDeploy: true
