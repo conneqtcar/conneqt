@@ -8,7 +8,9 @@ import {
   Param,
   UseGuards,
   Header,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsString, IsOptional, IsBoolean, IsInt, IsUrl, Min } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -58,6 +60,8 @@ export class BannersController {
 
   /** Rota pública — usada pela home do web */
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(60_000)
   @Header('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120')
   @ApiOperation({ summary: 'Listar banners ativos (público)' })
   findActive() {

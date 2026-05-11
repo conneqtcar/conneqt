@@ -69,7 +69,23 @@ services:
       - key: AWS_CLOUDFRONT_URL
         sync: false
 
-  # ── 2. Redis ──────────────────────────────────────────────────────────────
+  # ── 2. Keepalive Cron ─────────────────────────────────────────────────────
+  # Pinga a API a cada 14 min para evitar cold start no plano free do Render.
+  - type: cron
+    name: conneqt-api-keepalive
+    runtime: node
+    region: oregon
+    schedule: "*/14 * * * *"
+    buildCommand: echo "keepalive"
+    startCommand: >-
+      node -e "
+      require('https').get('https://conneqt-api.onrender.com/api/v1/health', (r) => {
+        console.log('keepalive ok', r.statusCode, new Date().toISOString());
+        process.exit(0);
+      }).on('error', (e) => { console.error(e.message); process.exit(1); });
+      "
+
+  # ── 3. Redis ──────────────────────────────────────────────────────────────
   - type: redis
     name: conneqt-redis
     region: oregon
