@@ -7,52 +7,9 @@ interface SaveMessageData {
 export declare class ChatService {
     private readonly prisma;
     constructor(prisma: PrismaClient);
-    saveMessage(data: SaveMessageData): Promise<{
-        sender: {
-            name: string;
-            id: string;
-            avatarUrl: string | null;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        content: string;
-        listingId: string;
-        readAt: Date | null;
-        senderId: string;
-    }>;
-    getMessages(listingId: string, page?: number, limit?: number): Promise<({
-        sender: {
-            name: string;
-            id: string;
-            avatarUrl: string | null;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        content: string;
-        listingId: string;
-        readAt: Date | null;
-        senderId: string;
-    })[]>;
-    getConversationsForSeller(sellerId: string): Promise<{
-        listingId: string;
-        price: number;
-        status: import("@prisma/client").$Enums.ListingStatus;
-        vehicle: {
-            brand: string | null;
-            model: string | null;
-            year: number | null;
-        };
-        lastMessage: {
-            createdAt: Date;
-            content: string;
-            sender: {
-                name: string;
-                id: string;
-            };
-        };
-    }[]>;
+    saveMessage(data: SaveMessageData): Promise<any>;
+    getMessages(listingId: string, page?: number, limit?: number): Promise<any>;
+    getConversationsForSeller(sellerId: string): Promise<any>;
 }
 export {};
 //# sourceMappingURL=chat.service.d.ts.map

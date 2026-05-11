@@ -61,7 +61,7 @@ export class ChatService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return listings.map((l) => ({
+    return listings.map((l: (typeof listings)[number]) => ({
       listingId: l.id,
       price: l.price,
       status: l.status,

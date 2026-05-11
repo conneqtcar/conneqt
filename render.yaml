@@ -12,12 +12,15 @@ services:
   # ── 1. API NestJS ─────────────────────────────────────────────────────────
   - type: web
     name: conneqt-api
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    runtime: node
+    nodeVersion: 20.19.1
     region: oregon
     plan: free
     rootDir: .
+    buildCommand: >-
+      npm install -g pnpm@9 &&
+      pnpm install --filter @conneqtcar/api... --filter @conneqtcar/database --no-frozen-lockfile --ignore-scripts
+    startCommand: node apps/api/dist/main.js
     healthCheckPath: /api/v1/health
     autoDeploy: true
     envVars:

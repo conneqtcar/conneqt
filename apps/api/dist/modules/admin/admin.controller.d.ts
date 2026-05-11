@@ -3,45 +3,28 @@ export declare class AdminController {
     private readonly adminService;
     constructor(adminService: AdminService);
     dashboard(): Promise<{
-        totalUsers: number;
-        totalListings: number;
-        activeListings: number;
-        pendingInspections: number;
-        awaitingReviewInspections: number;
-        totalDealers: number;
+        totalUsers: any;
+        totalListings: any;
+        activeListings: any;
+        pendingInspections: any;
+        awaitingReviewInspections: any;
+        totalDealers: any;
         updatedAt: Date;
     }>;
     getUsers(page?: number, limit?: number): Promise<{
-        data: {
-            name: string;
-            type: import("@prisma/client").$Enums.UserType;
-            email: string;
-            id: string;
-            status: import("@prisma/client").$Enums.UserStatus;
-            kycStatus: import("@prisma/client").$Enums.KycStatus;
-            createdAt: Date;
-        }[];
-        total: number;
+        data: any;
+        total: any;
         page: number;
         limit: number;
         totalPages: number;
     }>;
     blockUser(id: string, body: {
         reason: string;
-    }): Promise<{
-        id: string;
-        status: import("@prisma/client").$Enums.UserStatus;
-    }>;
-    approveKyc(id: string): Promise<{
-        id: string;
-        kycStatus: import("@prisma/client").$Enums.KycStatus;
-    }>;
+    }): Promise<any>;
+    approveKyc(id: string): Promise<any>;
     rejectKyc(id: string, body: {
         reason: string;
-    }): Promise<{
-        id: string;
-        kycStatus: import("@prisma/client").$Enums.KycStatus;
-    }>;
+    }): Promise<any>;
     createDealer(body: {
         companyName: string;
         cnpj: string;
@@ -50,19 +33,7 @@ export declare class AdminController {
         email: string;
         phone?: string;
         password: string;
-    }): Promise<{
-        id: string;
-        status: import("@prisma/client").$Enums.DealerStatus;
-        createdAt: Date;
-        user: {
-            name: string;
-            email: string;
-            id: string;
-        };
-        companyName: string;
-        cnpj: string;
-        plan: import("@prisma/client").$Enums.DealerPlan;
-    }>;
+    }): Promise<any>;
     createListing(body: {
         brand: string;
         model: string;
@@ -82,35 +53,7 @@ export declare class AdminController {
         acceptsTrade: boolean;
         sellerEmail?: string;
         photoUrls?: string[];
-    }): Promise<{
-        vehicle: {
-            plate: string | null;
-            brand: string | null;
-            model: string | null;
-            year: number | null;
-        };
-        seller: {
-            name: string;
-            email: string;
-        };
-    } & {
-        description: string | null;
-        id: string;
-        status: import("@prisma/client").$Enums.ListingStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        expiresAt: Date | null;
-        vehicleId: string;
-        price: number;
-        acceptsFinancing: boolean;
-        acceptsTrade: boolean;
-        views: number;
-        soldAt: Date | null;
-        sellerId: string;
-    }>;
-    deactivateListing(id: string): Promise<{
-        id: string;
-        status: import("@prisma/client").$Enums.ListingStatus;
-    }>;
+    }): Promise<any>;
+    deactivateListing(id: string): Promise<any>;
 }
 //# sourceMappingURL=admin.controller.d.ts.map

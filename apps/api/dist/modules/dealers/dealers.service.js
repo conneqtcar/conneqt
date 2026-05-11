@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DealersService = void 0;
 const common_1 = require("@nestjs/common");
@@ -75,5 +76,5 @@ exports.DealersService = DealersService;
 exports.DealersService = DealersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(database_module_1.PRISMA_SERVICE)),
-    __metadata("design:paramtypes", [database_1.PrismaClient])
+    __metadata("design:paramtypes", [typeof (_a = typeof database_1.PrismaClient !== "undefined" && database_1.PrismaClient) === "function" ? _a : Object])
 ], DealersService);

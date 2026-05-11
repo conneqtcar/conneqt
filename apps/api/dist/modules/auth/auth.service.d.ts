@@ -11,24 +11,17 @@ export declare class AuthService {
     register(dto: RegisterDto): Promise<{
         accessToken: string;
         refreshToken: string;
-        user: {
-            name: string;
-            type: import("@prisma/client").$Enums.UserType;
-            email: string;
-            id: string;
-            kycStatus: import("@prisma/client").$Enums.KycStatus;
-            createdAt: Date;
-        };
+        user: any;
     }>;
     login(dto: LoginDto): Promise<{
         accessToken: string;
         refreshToken: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
-            type: import("@prisma/client").$Enums.UserType;
-            kycStatus: import("@prisma/client").$Enums.KycStatus;
+            id: any;
+            email: any;
+            name: any;
+            type: any;
+            kycStatus: any;
         };
     }>;
     logout(userId: string): Promise<{
@@ -38,24 +31,7 @@ export declare class AuthService {
         accessToken: string;
         refreshToken: string;
     }>;
-    validateUser(email: string, password: string): Promise<{
-        name: string;
-        type: import("@prisma/client").$Enums.UserType;
-        email: string;
-        phone: string | null;
-        id: string;
-        cpf: string | null;
-        status: import("@prisma/client").$Enums.UserStatus;
-        kycStatus: import("@prisma/client").$Enums.KycStatus;
-        avatarUrl: string | null;
-        kycSubmittedAt: Date | null;
-        kycApprovedAt: Date | null;
-        kycRejectionReason: string | null;
-        blockReason: string | null;
-        lastLoginAt: Date | null;
-        createdAt: Date;
-        updatedAt: Date;
-    } | null>;
+    validateUser(email: string, password: string): Promise<any>;
     private generateTokens;
     private storeRefreshToken;
 }

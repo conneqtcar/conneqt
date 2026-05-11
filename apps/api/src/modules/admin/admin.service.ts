@@ -1,5 +1,5 @@
 import { Injectable, Inject, ConflictException, NotFoundException } from '@nestjs/common';
-import { PrismaClient } from '@conneqtcar/database';
+import { PrismaClient, Prisma } from '@conneqtcar/database';
 import * as bcrypt from 'bcryptjs';
 import { PRISMA_SERVICE } from '../database/database.module';
 
@@ -95,7 +95,7 @@ export class AdminService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.create({
         data: {
           email: dto.email,
@@ -174,7 +174,7 @@ export class AdminService {
     if (dto.doors) extras.push(`${dto.doors} portas`);
     const description = [dto.description, extras.join(' · ')].filter(Boolean).join('\n');
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Create vehicle
       const vehicle = await tx.vehicle.create({
         data: {

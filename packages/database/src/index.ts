@@ -1,4 +1,4 @@
-export { PrismaClient } from '@prisma/client';
+export { PrismaClient, Prisma } from './generated';
 export type {
   User,
   Vehicle,
@@ -11,4 +11,4 @@ export type {
   Dealer,
   DealerListing,
   RefreshToken,
-} from '@prisma/client';
+} from './generated';

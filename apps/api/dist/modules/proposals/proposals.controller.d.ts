@@ -8,102 +8,21 @@ export declare class ProposalsController {
         user: {
             sub: string;
         };
-    }, dto: CreateProposalDto): Promise<{
-        listing: {
-            price: number;
-            sellerId: string;
-        };
-        buyer: {
-            name: string;
-            id: string;
-        };
-    } & {
-        message: string | null;
-        id: string;
-        status: import("@prisma/client").$Enums.ProposalStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        listingId: string;
-        amount: number;
-        counterAmount: number | null;
-        respondedAt: Date | null;
-        buyerId: string;
-    }>;
+    }, dto: CreateProposalDto): Promise<any>;
     myProposals(req: {
         user: {
             sub: string;
         };
-    }): Promise<({
-        listing: {
-            vehicle: {
-                brand: string | null;
-                model: string | null;
-                year: number | null;
-            };
-        } & {
-            description: string | null;
-            id: string;
-            status: import("@prisma/client").$Enums.ListingStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            expiresAt: Date | null;
-            vehicleId: string;
-            price: number;
-            acceptsFinancing: boolean;
-            acceptsTrade: boolean;
-            views: number;
-            soldAt: Date | null;
-            sellerId: string;
-        };
-    } & {
-        message: string | null;
-        id: string;
-        status: import("@prisma/client").$Enums.ProposalStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        listingId: string;
-        amount: number;
-        counterAmount: number | null;
-        respondedAt: Date | null;
-        buyerId: string;
-    })[]>;
+    }): Promise<any>;
     byListing(listingId: string, req: {
         user: {
             sub: string;
         };
-    }): Promise<({
-        buyer: {
-            name: string;
-            id: string;
-            kycStatus: import("@prisma/client").$Enums.KycStatus;
-        };
-    } & {
-        message: string | null;
-        id: string;
-        status: import("@prisma/client").$Enums.ProposalStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        listingId: string;
-        amount: number;
-        counterAmount: number | null;
-        respondedAt: Date | null;
-        buyerId: string;
-    })[]>;
+    }): Promise<any>;
     respond(id: string, req: {
         user: {
             sub: string;
         };
-    }, dto: RespondProposalDto): Promise<{
-        message: string | null;
-        id: string;
-        status: import("@prisma/client").$Enums.ProposalStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        listingId: string;
-        amount: number;
-        counterAmount: number | null;
-        respondedAt: Date | null;
-        buyerId: string;
-    }>;
+    }, dto: RespondProposalDto): Promise<any>;
 }
 //# sourceMappingURL=proposals.controller.d.ts.map

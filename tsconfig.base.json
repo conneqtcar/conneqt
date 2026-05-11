@@ -17,7 +17,7 @@
       "@conneqtcar/types": ["./packages/types/src/index.ts"],
       "@conneqtcar/database": ["./packages/database/src/index.ts"],
       "@conneqtcar/ui": ["./packages/ui/src/index.ts"],
-      "@prisma/client": ["./node_modules/.prisma/client"]
+      "@prisma/client": ["./packages/database/src/generated"]
     }
   },
   "exclude": ["node_modules", "dist", ".next", "coverage"]

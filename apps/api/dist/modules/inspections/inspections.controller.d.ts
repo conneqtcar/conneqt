@@ -10,20 +10,7 @@ export declare class InspectionsController {
         user: {
             sub: string;
         };
-    }, dto: CreateInspectionDto): Promise<{
-        type: import("@prisma/client").$Enums.InspectionType;
-        id: string;
-        status: import("@prisma/client").$Enums.InspectionStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        vehicleId: string;
-        score: number | null;
-        reviewerId: string | null;
-        reviewedAt: Date | null;
-        reviewNotes: string | null;
-        aiFlags: string[];
-        aiProcessedAt: Date | null;
-    }>;
+    }, dto: CreateInspectionDto): Promise<any>;
     getUploadUrl(id: string, req: {
         user: {
             sub: string;
@@ -38,92 +25,20 @@ export declare class InspectionsController {
         };
     }, dto: SubmitMediaDto): Promise<{
         message: string;
-        count: number;
+        count: any;
     }>;
     getQueue(page?: number, limit?: number): Promise<{
-        data: ({
-            vehicle: {
-                id: string;
-                plate: string | null;
-                brand: string | null;
-                model: string | null;
-                year: number | null;
-            };
-            media: {
-                type: import("@prisma/client").$Enums.MediaType;
-                id: string;
-                url: string;
-            }[];
-        } & {
-            type: import("@prisma/client").$Enums.InspectionType;
-            id: string;
-            status: import("@prisma/client").$Enums.InspectionStatus;
-            createdAt: Date;
-            updatedAt: Date;
-            vehicleId: string;
-            score: number | null;
-            reviewerId: string | null;
-            reviewedAt: Date | null;
-            reviewNotes: string | null;
-            aiFlags: string[];
-            aiProcessedAt: Date | null;
-        })[];
-        total: number;
+        data: any;
+        total: any;
         page: number;
         limit: number;
         totalPages: number;
     }>;
-    getStatus(id: string): Promise<{
-        items: {
-            id: string;
-            createdAt: Date;
-            result: string;
-            score: number | null;
-            notes: string | null;
-            inspectionId: string;
-            item: string;
-            category: string;
-        }[];
-        reviewer: {
-            name: string;
-            id: string;
-        } | null;
-        media: {
-            type: import("@prisma/client").$Enums.MediaType;
-            id: string;
-            url: string;
-        }[];
-    } & {
-        type: import("@prisma/client").$Enums.InspectionType;
-        id: string;
-        status: import("@prisma/client").$Enums.InspectionStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        vehicleId: string;
-        score: number | null;
-        reviewerId: string | null;
-        reviewedAt: Date | null;
-        reviewNotes: string | null;
-        aiFlags: string[];
-        aiProcessedAt: Date | null;
-    }>;
+    getStatus(id: string): Promise<any>;
     review(id: string, req: {
         user: {
             sub: string;
         };
-    }, dto: ReviewInspectionDto): Promise<{
-        type: import("@prisma/client").$Enums.InspectionType;
-        id: string;
-        status: import("@prisma/client").$Enums.InspectionStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        vehicleId: string;
-        score: number | null;
-        reviewerId: string | null;
-        reviewedAt: Date | null;
-        reviewNotes: string | null;
-        aiFlags: string[];
-        aiProcessedAt: Date | null;
-    }>;
+    }, dto: ReviewInspectionDto): Promise<any>;
 }
 //# sourceMappingURL=inspections.controller.d.ts.map

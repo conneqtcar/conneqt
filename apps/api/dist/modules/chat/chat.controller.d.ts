@@ -6,23 +6,6 @@ export declare class ChatController {
         user: {
             sub: string;
         };
-    }): Promise<{
-        listingId: string;
-        price: number;
-        status: import("@prisma/client").$Enums.ListingStatus;
-        vehicle: {
-            brand: string | null;
-            model: string | null;
-            year: number | null;
-        };
-        lastMessage: {
-            createdAt: Date;
-            content: string;
-            sender: {
-                name: string;
-                id: string;
-            };
-        };
-    }[]>;
+    }): Promise<any>;
 }
 //# sourceMappingURL=chat.controller.d.ts.map

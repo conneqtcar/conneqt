@@ -19,36 +19,10 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
     handleJoinRoom(data: JoinRoomData, client: Socket): void;
-    handleMessage(data: SendMessageData, client: Socket): Promise<({
-        sender: {
-            name: string;
-            id: string;
-            avatarUrl: string | null;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        content: string;
-        listingId: string;
-        readAt: Date | null;
-        senderId: string;
-    }) | undefined>;
+    handleMessage(data: SendMessageData, client: Socket): Promise<any>;
     getMessages(data: JoinRoomData & {
         page: number;
-    }): Promise<({
-        sender: {
-            name: string;
-            id: string;
-            avatarUrl: string | null;
-        };
-    } & {
-        id: string;
-        createdAt: Date;
-        content: string;
-        listingId: string;
-        readAt: Date | null;
-        senderId: string;
-    })[]>;
+    }): Promise<any>;
 }
 export {};
 //# sourceMappingURL=chat.gateway.d.ts.map

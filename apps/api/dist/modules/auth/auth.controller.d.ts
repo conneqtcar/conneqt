@@ -8,24 +8,17 @@ export declare class AuthController {
     register(dto: RegisterDto): Promise<{
         accessToken: string;
         refreshToken: string;
-        user: {
-            name: string;
-            type: import("@prisma/client").$Enums.UserType;
-            email: string;
-            id: string;
-            kycStatus: import("@prisma/client").$Enums.KycStatus;
-            createdAt: Date;
-        };
+        user: any;
     }>;
     login(dto: LoginDto): Promise<{
         accessToken: string;
         refreshToken: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
-            type: import("@prisma/client").$Enums.UserType;
-            kycStatus: import("@prisma/client").$Enums.KycStatus;
+            id: any;
+            email: any;
+            name: any;
+            type: any;
+            kycStatus: any;
         };
     }>;
     logout(req: {
