@@ -4,14 +4,14 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm@9
 
-# Copy workspace manifests (sem instalar ainda — melhor uso de cache)
+# Copy workspace manifests
 COPY package.json pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml* ./
 COPY packages/database/package.json packages/database/
 COPY apps/api/package.json apps/api/
 COPY packages/types/package.json packages/types/
 
-# Instala apenas dependências de produção, sem rodar postinstall scripts
+# Instala apenas dependências de produção, sem rodar postinstall/prisma
 RUN pnpm install \
     --filter @conneqtcar/api \
     --filter @conneqtcar/database \
@@ -19,11 +19,10 @@ RUN pnpm install \
     --ignore-scripts \
     --no-frozen-lockfile
 
-# Copia o schema do Prisma e gera o client
-COPY packages/database/prisma packages/database/prisma
-RUN cd packages/database && npx prisma generate
+# Copia o cliente Prisma pré-gerado (já inclui binários linux-musl e debian)
+COPY packages/database/src/generated packages/database/src/generated
 
-# Copia os dist pré-compilados (gerados localmente antes do commit)
+# Copia os dist pré-compilados
 COPY packages/database/dist packages/database/dist
 COPY apps/api/dist apps/api/dist
 
