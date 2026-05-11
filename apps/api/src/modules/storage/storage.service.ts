@@ -1,30 +1,55 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-  GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
 export class StorageService {
-  private readonly s3: S3Client;
+  private readonly supabaseUrl: string;
+  private readonly serviceKey: string;
   private readonly bucket: string;
-  private readonly cdnUrl: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.s3 = new S3Client({
-      region: configService.get<string>('AWS_REGION', 'us-east-1'),
-      credentials: {
-        accessKeyId: configService.get<string>('AWS_ACCESS_KEY_ID', ''),
-        secretAccessKey: configService.get<string>('AWS_SECRET_ACCESS_KEY', ''),
-      },
-    });
-    this.bucket = configService.get<string>('AWS_S3_BUCKET', 'conneqtcar-media-dev');
-    this.cdnUrl = configService.get<string>('AWS_CLOUDFRONT_URL', '');
+    this.supabaseUrl = configService.get<string>('SUPABASE_URL', '');
+    this.serviceKey = configService.get<string>('SUPABASE_SERVICE_ROLE_KEY', '');
+    this.bucket = configService.get<string>('SUPABASE_STORAGE_BUCKET', 'banners');
   }
+
+  /** Upload de um buffer diretamente para o Supabase Storage (bucket público). */
+  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<string> {
+    if (!this.supabaseUrl || !this.serviceKey) {
+      throw new InternalServerErrorException(
+        'Supabase Storage não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.',
+      );
+    }
+
+    const url = `${this.supabaseUrl}/storage/v1/object/${this.bucket}/${key}`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.serviceKey}`,
+        'Content-Type': contentType,
+        'x-upsert': 'true',
+      },
+      body: buffer,
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new InternalServerErrorException(`Supabase Storage error: ${res.status} – ${body}`);
+    }
+
+    return this.getPublicUrl(key);
+  }
+
+  getPublicUrl(key: string): string {
+    return `${this.supabaseUrl}/storage/v1/object/public/${this.bucket}/${key}`;
+  }
+
+  /** Mantido para compatibilidade com outros módulos que chamem presigned URL. */
+  async getPresignedPutUrl(_key: string, _contentType: string): Promise<string> {
+    throw new InternalServerErrorException('Use uploadBuffer com Supabase Storage.');
+  }
+}
 
   async getPresignedPutUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
     const command = new PutObjectCommand({

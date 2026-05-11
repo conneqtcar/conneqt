@@ -32,6 +32,13 @@ services:
         sync: false   # preencher no dashboard
       - key: DIRECT_URL
         sync: false   # preencher no dashboard
+      # SUPABASE STORAGE
+      - key: SUPABASE_URL
+        sync: false   # ex: https://qwljecbnacxyogfshrrq.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false   # service_role key do projeto Supabase
+      - key: SUPABASE_STORAGE_BUCKET
+        value: banners
       # REDIS (provisionado abaixo como conneqt-redis)
       - key: REDIS_URL
         fromService:
