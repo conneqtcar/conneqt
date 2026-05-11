@@ -19,6 +19,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { DatabaseModule } from './modules/database/database.module';
+import { BannersModule } from './modules/banners/banners.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { DatabaseModule } from './modules/database/database.module';
     StorageModule,
     NotificationsModule,
     ChatModule,
+    BannersModule,
   ],
 })
 export class AppModule {}

@@ -10,6 +10,7 @@ import {
   Building2,
   Settings,
   LogOut,
+  ImagePlay,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Anúncios', href: '/anuncios', icon: Car },
   { name: 'Usuários', href: '/usuarios', icon: Users },
   { name: 'Lojistas', href: '/lojistas', icon: Building2 },
+  { name: 'Banners', href: '/banners', icon: ImagePlay },
   { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
 

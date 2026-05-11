@@ -1,0 +1,15 @@
+[
+  {"key":"DIRECT_URL","value":"postgresql://postgres.qwljecbnacxyogfshrrq:m@!T677RB^8K*uh@aws-1-sa-east-1.pooler.supabase.com:5432/postgres"},
+  {"key":"DATABASE_URL","value":"postgresql://postgres.qwljecbnacxyogfshrrq:m@!T677RB^8K*uh@aws-1-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"},
+  {"key":"AWS_REGION","value":"us-east-1"},
+  {"key":"FIPE_API_URL","value":"https://parallelum.com.br/fipe/api/v2"},
+  {"key":"JWT_REFRESH_EXPIRES_IN","value":"30d"},
+  {"key":"JWT_REFRESH_SECRET","value":"WZUxipOMBi2fwWlkn40tt/sCHkNCdjJGTuYe/bJ1nPI="},
+  {"key":"JWT_EXPIRES_IN","value":"7d"},
+  {"key":"JWT_SECRET","value":"7iOudFIiUChPU4yxDMW7BEF0FWgA+EZu7h5JbVB2dOo="},
+  {"key":"REDIS_URL","value":"redis://red-d7s7d2favr4c73flpav0:6379"},
+  {"key":"NODE_ENV","value":"production"},
+  {"key":"FRONTEND_URL","value":"https://conneqtcar.com"},
+  {"key":"SELLER_URL","value":"https://vendedor.conneqtcar.com"},
+  {"key":"ADMIN_URL","value":"https://admin.conneqtcar.com"}
+]

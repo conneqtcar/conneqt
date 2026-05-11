@@ -5,7 +5,7 @@ import { Shield, ShieldCheck, ArrowRight, Search, TrendingUp, Users, Star, Chevr
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-const BG_IMAGES = [
+const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80',
   'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1920&q=80',
   'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1920&q=80',
@@ -57,16 +57,30 @@ function StatCard({ stat, active, delay }: { stat: typeof STATS[0]; active: bool
 
 export function HeroSection() {
   const [activeImg, setActiveImg] = useState(0);
+  const [bgImages, setBgImages] = useState<string[]>(FALLBACK_IMAGES);
   const [statsVisible, setStatsVisible] = useState(false);
   const [query, setQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
 
+  // Busca banners da API
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
+    fetch(`${apiUrl}/api/v1/banners`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: { imageUrl: string }[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setBgImages(data.map((b) => b.imageUrl));
+        }
+      })
+      .catch(() => { /* mantém fallback */ });
+  }, []);
+
   // Slideshow automático
   useEffect(() => {
-    const id = setInterval(() => setActiveImg((i) => (i + 1) % BG_IMAGES.length), 5000);
+    const id = setInterval(() => setActiveImg((i) => (i + 1) % bgImages.length), 5000);
     return () => clearInterval(id);
-  }, []);
+  }, [bgImages.length]);
 
   // Dispara contadores após mount
   useEffect(() => {
@@ -105,7 +119,7 @@ export function HeroSection() {
   return (
     <section className="relative flex min-h-screen flex-col overflow-hidden noise-overlay">
       {/* ── Background slideshow ── */}
-      {BG_IMAGES.map((src, i) => (
+      {bgImages.map((src, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={src}
