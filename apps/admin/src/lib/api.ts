@@ -4,7 +4,7 @@ import { demoAdapter } from './demo-mock';
 const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 const api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}/api/v1`,
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1',
   headers: { 'Content-Type': 'application/json' },
   ...(IS_DEMO && { adapter: demoAdapter }),
 });

@@ -30,8 +30,8 @@ export default function AdminLoginPage() {
   const onSubmit = async (values: FormData) => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-      const { data } = await axios.post(`${baseUrl}/api/v1/auth/login`, values);
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+      const { data } = await axios.post(`${baseUrl}/auth/login`, values);
 
       if (data.user.type !== 'ADMIN') {
         toast.error('Acesso restrito a administradores.');
