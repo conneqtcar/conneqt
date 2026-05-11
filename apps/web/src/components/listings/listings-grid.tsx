@@ -29,7 +29,6 @@ export function ListingsGrid({ featured = false, filters = {} }: ListingsGridPro
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="h-56 animate-pulse rounded-xl bg-gray-100" />
         ))}
-        ))}
       </div>
     );
   }

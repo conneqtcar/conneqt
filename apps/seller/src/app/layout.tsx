@@ -4,6 +4,8 @@ import { SellerProviders } from './providers';
 import { SellerShell } from '@/components/layout/seller-shell';
 import './globals.css';
 
+export const dynamic = 'force-dynamic';
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport: Viewport = {
