@@ -272,7 +272,7 @@ export function HeroSection() {
 
         {/* Indicadores do slideshow */}
         <div className="in-view-hidden hero-anim delay-500 mt-8 flex gap-2">
-          {BG_IMAGES.map((_, i) => (
+          {bgImages.map((_, i) => (
             <button
               key={i}
               onClick={() => setActiveImg(i)}
