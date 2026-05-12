@@ -7,7 +7,7 @@ import api from '@/lib/api';
 interface Inspection {
   id: string;
   status: string;
-  aiScore: number | null;
+  score: number | null;
   createdAt: string;
   vehicle: {
     plate: string;
@@ -32,8 +32,8 @@ export default function InspecoesPage() {
   const { data = [], isLoading } = useQuery<Inspection[]>({
     queryKey: ['admin-inspections-all'],
     queryFn: async () => {
-      const { data } = await api.get('/inspections/queue');
-      return data;
+      const { data } = await api.get('/admin/inspections?limit=100');
+      return data.data ?? [];
     },
     refetchInterval: 20000,
   });
@@ -41,7 +41,7 @@ export default function InspecoesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900">Inspeções</h1>
-      <p className="mt-1 text-gray-500">Fila de revisão manual de inspeções</p>
+      <p className="mt-1 text-gray-500">Todas as inspeções da plataforma</p>
 
       <div className="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
         {isLoading ? (
@@ -49,7 +49,7 @@ export default function InspecoesPage() {
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
           </div>
         ) : data.length === 0 ? (
-          <p className="py-12 text-center text-gray-400">Nenhuma inspeção aguardando revisão</p>
+          <p className="py-12 text-center text-gray-400">Nenhuma inspeção encontrada</p>
         ) : (
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -72,12 +72,12 @@ export default function InspecoesPage() {
                       </div>
                       <div className="text-sm text-gray-500">{item.vehicle.plate}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{item.vehicle.owner.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{item.vehicle.owner?.name ?? '—'}</td>
                     <td className="px-6 py-4">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}`}>{s.label}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {item.aiScore !== null ? `${item.aiScore}%` : '—'}
+                      {item.score !== null ? `${item.score}%` : '—'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{item._count.media}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">

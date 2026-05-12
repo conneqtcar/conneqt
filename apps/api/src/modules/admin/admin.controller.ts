@@ -1,14 +1,22 @@
-import { Controller, Get, Patch, Post, Body, Param, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller, Get, Patch, Post, Body, Param, UseGuards, Query,
+  UseInterceptors, UploadedFile, BadRequestException,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminService } from './admin.service';
+import { StorageService } from '../storage/storage.service';
 
 @ApiTags('admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Get('dashboard')
   @ApiOperation({ summary: 'Dashboard — métricas em tempo real' })
@@ -71,6 +79,30 @@ export class AdminController {
   @ApiOperation({ summary: 'Desativar anúncio (admin)' })
   deactivateListing(@Param('id') id: string) {
     return this.adminService.deactivateListing(id);
+  }
+
+  @Get('inspections')
+  @ApiOperation({ summary: 'Listar todas as inspeções (admin)' })
+  getInspections(
+    @Query('page') page = 1,
+    @Query('limit') limit = 50,
+    @Query('status') status?: string,
+  ) {
+    return this.adminService.getAllInspections(+page, +limit, status);
+  }
+
+  @Post('upload-photo')
+  @ApiOperation({ summary: 'Upload de foto de veículo (admin)' })
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 20 * 1024 * 1024 } }))
+  async uploadPhoto(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado.');
+    if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/')) {
+      throw new BadRequestException('Apenas imagens e vídeos são permitidos.');
+    }
+    const ext = file.originalname.split('.').pop() ?? 'jpg';
+    const key = `vehicles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const url = await this.storageService.uploadBuffer(key, file.buffer, file.mimetype);
+    return { url };
   }
 }
 

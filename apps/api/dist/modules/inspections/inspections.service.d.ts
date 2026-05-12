@@ -42,6 +42,20 @@ export declare class InspectionsService {
             item: string;
             notes: string | null;
         }[];
+        vehicle: {
+            id: string;
+            plate: string | null;
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+            color: string | null;
+            mileage: number;
+            owner: {
+                name: string;
+                email: string;
+                id: string;
+            };
+        };
         reviewer: {
             name: string;
             id: string;
@@ -49,6 +63,7 @@ export declare class InspectionsService {
         media: {
             type: import("packages/database/dist/generated").$Enums.MediaType;
             id: string;
+            createdAt: Date;
             url: string;
         }[];
     } & {

@@ -1,7 +1,9 @@
 import { AdminService } from './admin.service';
+import { StorageService } from '../storage/storage.service';
 export declare class AdminController {
     private readonly adminService;
-    constructor(adminService: AdminService);
+    private readonly storageService;
+    constructor(adminService: AdminService, storageService: StorageService);
     dashboard(): Promise<{
         totalUsers: number;
         totalListings: number;
@@ -111,6 +113,35 @@ export declare class AdminController {
     deactivateListing(id: string): Promise<{
         id: string;
         status: import("packages/database/dist/generated").$Enums.ListingStatus;
+    }>;
+    getInspections(page?: number, limit?: number, status?: string): Promise<{
+        data: {
+            type: import("packages/database/dist/generated").$Enums.InspectionType;
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+            createdAt: Date;
+            _count: {
+                media: number;
+            };
+            vehicle: {
+                id: string;
+                plate: string | null;
+                brand: string | null;
+                model: string | null;
+                year: number | null;
+                owner: {
+                    name: string;
+                };
+            };
+            score: number | null;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
+    uploadPhoto(file: Express.Multer.File): Promise<{
+        url: string;
     }>;
 }
 //# sourceMappingURL=admin.controller.d.ts.map

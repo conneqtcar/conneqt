@@ -25,17 +25,16 @@ import api from '@/lib/api';
 
 interface InspectionMedia {
   id: string;
-  mediaType: string;
+  type: string;
   url: string;
-  fileName: string;
   createdAt: string;
 }
 
 interface InspectionItem {
   id: string;
   category: string;
-  description: string;
-  passed: boolean | null;
+  item: string;
+  result: 'OK' | 'NOK' | 'NA';
   notes: string | null;
 }
 
@@ -43,7 +42,7 @@ interface InspectionDetail {
   id: string;
   type: string;
   status: string;
-  aiScore: number | null;
+  score: number | null;
   aiFlags: string[];
   reviewNotes: string | null;
   createdAt: string;
@@ -116,7 +115,7 @@ export default function InspectionDetailPage() {
 
   const reviewMutation = useMutation({
     mutationFn: (decision: 'APPROVED' | 'REJECTED') =>
-      api.patch(`/inspections/${id}/review`, { decision, notes }),
+      api.patch(`/inspections/${id}/review`, { approved: decision === 'APPROVED', notes }),
     onSuccess: (_, decision) => {
       toast.success(decision === 'APPROVED' ? 'Inspecao aprovada!' : 'Inspecao rejeitada.');
       qc.invalidateQueries({ queryKey: ['inspection', id] });
@@ -137,10 +136,10 @@ export default function InspectionDetailPage() {
 
   const s = statusConfig[data.status] ?? statusConfig.PENDING;
   const canReview = data.status === 'AWAITING_REVIEW';
-  const photos = data.media.filter((m) => m.mediaType === 'PHOTO');
+  const photos = data.media.filter((m) => m.type === 'PHOTO');
   const selectedMedia = data.media.find((m) => m.id === selected) ?? photos[0];
-  const passedItems = data.items.filter((i) => i.passed === true).length;
-  const failedItems = data.items.filter((i) => i.passed === false).length;
+  const passedItems = data.items.filter((i) => i.result === 'OK').length;
+  const failedItems = data.items.filter((i) => i.result === 'NOK').length;
 
   return (
     <div className="min-h-full bg-gray-50/50">
@@ -186,11 +185,11 @@ export default function InspectionDetailPage() {
               <div className="p-5">
                 <div className="overflow-hidden rounded-xl bg-gray-100 aspect-video flex items-center justify-center">
                   {selectedMedia ? (
-                    selectedMedia.mediaType === 'VIDEO' ? (
+                    selectedMedia.type === 'VIDEO' ? (
                       <video src={selectedMedia.url} controls className="h-full w-full object-contain" />
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={selectedMedia.url} alt={selectedMedia.fileName} className="h-full w-full object-cover" />
+                      <img src={selectedMedia.url} alt="" className="h-full w-full object-cover" />
                     )
                   ) : (
                     <div className="flex flex-col items-center gap-3 text-gray-300">
@@ -205,19 +204,18 @@ export default function InspectionDetailPage() {
                       <button
                         key={m.id}
                         onClick={() => setSelected(m.id)}
-                        title={m.fileName}
                         className={`relative h-16 w-16 overflow-hidden rounded-lg border-2 transition ${
                           (selected ?? photos[0]?.id) === m.id
                             ? 'border-brand-gold ring-2 ring-amber-200'
                             : 'border-transparent hover:border-gray-300'
                         }`}
                       >
-                        {m.mediaType === 'PHOTO' ? (
+                        {m.type === 'PHOTO' ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={m.url} alt={m.fileName} className="h-full w-full object-cover" />
+                          <img src={m.url} alt="" className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-gray-100">
-                            {mediaIconFn(m.mediaType)}
+                            {mediaIconFn(m.type)}
                           </div>
                         )}
                       </button>
@@ -253,13 +251,13 @@ export default function InspectionDetailPage() {
                   {data.items.map((item) => (
                     <div key={item.id} className="flex items-start gap-3 px-6 py-3.5 hover:bg-gray-50/60">
                       <div className="mt-0.5 flex-shrink-0">
-                        {item.passed === true && <CheckCircle className="h-4 w-4 text-emerald-500" />}
-                        {item.passed === false && <XCircle className="h-4 w-4 text-red-500" />}
-                        {item.passed === null && <Shield className="h-4 w-4 text-gray-300" />}
+                        {item.result === 'OK' && <CheckCircle className="h-4 w-4 text-emerald-500" />}
+                        {item.result === 'NOK' && <XCircle className="h-4 w-4 text-red-500" />}
+                        {item.result === 'NA' && <Shield className="h-4 w-4 text-gray-300" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800">{item.category}</p>
-                        {item.description && <p className="text-xs text-gray-400">{item.description}</p>}
+                        {item.item && <p className="text-xs text-gray-400">{item.item}</p>}
                         {item.notes && (
                           <p className="mt-1 rounded-md bg-amber-50 px-2.5 py-1 text-xs text-amber-700">
                             {item.notes}
@@ -279,7 +277,7 @@ export default function InspectionDetailPage() {
                 <h2 className="text-sm font-semibold text-gray-900">Analise por IA</h2>
               </div>
               <div className="flex flex-col items-center gap-4 p-6">
-                <ScoreRing score={data.aiScore} />
+                <ScoreRing score={data.score} />
                 {data.aiFlags && data.aiFlags.length > 0 && (
                   <div className="w-full">
                     <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Alertas detectados</p>
@@ -293,7 +291,7 @@ export default function InspectionDetailPage() {
                     </div>
                   </div>
                 )}
-                {(!data.aiFlags || data.aiFlags.length === 0) && data.aiScore !== null && (
+                {(!data.aiFlags || data.aiFlags.length === 0) && data.score !== null && (
                   <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 w-full">
                     <ShieldCheck className="h-4 w-4 text-emerald-500 flex-shrink-0" />
                     <span className="text-xs font-medium text-emerald-700">Nenhum alerta detectado</span>

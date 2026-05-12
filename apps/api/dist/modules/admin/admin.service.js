@@ -160,6 +160,38 @@ let AdminService = class AdminService {
             select: { id: true, status: true },
         });
     }
+    async getAllInspections(page = 1, limit = 50, status) {
+        const skip = (page - 1) * limit;
+        const where = status ? { status: status } : {};
+        const [total, inspections] = await Promise.all([
+            this.prisma.inspection.count({ where }),
+            this.prisma.inspection.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    status: true,
+                    score: true,
+                    type: true,
+                    createdAt: true,
+                    vehicle: {
+                        select: {
+                            id: true,
+                            brand: true,
+                            model: true,
+                            year: true,
+                            plate: true,
+                            owner: { select: { name: true } },
+                        },
+                    },
+                    _count: { select: { media: true } },
+                },
+            }),
+        ]);
+        return { data: inspections, total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
     async createListing(dto) {
         let seller = dto.sellerEmail
             ? await this.prisma.user.findUnique({ where: { email: dto.sellerEmail } })

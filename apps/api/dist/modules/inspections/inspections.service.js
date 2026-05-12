@@ -85,7 +85,19 @@ let InspectionsService = class InspectionsService {
         const inspection = await this.prisma.inspection.findUnique({
             where: { id: inspectionId },
             include: {
-                media: { select: { id: true, type: true, url: true } },
+                vehicle: {
+                    select: {
+                        id: true,
+                        brand: true,
+                        model: true,
+                        year: true,
+                        plate: true,
+                        color: true,
+                        mileage: true,
+                        owner: { select: { id: true, name: true, email: true } },
+                    },
+                },
+                media: { select: { id: true, type: true, url: true, createdAt: true } },
                 items: true,
                 reviewer: { select: { id: true, name: true } },
             },

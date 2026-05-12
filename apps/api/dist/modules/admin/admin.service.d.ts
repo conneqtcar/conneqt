@@ -63,6 +63,32 @@ export declare class AdminService {
         id: string;
         status: import("packages/database/dist/generated").$Enums.ListingStatus;
     }>;
+    getAllInspections(page?: number, limit?: number, status?: string): Promise<{
+        data: {
+            type: import("packages/database/dist/generated").$Enums.InspectionType;
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+            createdAt: Date;
+            _count: {
+                media: number;
+            };
+            vehicle: {
+                id: string;
+                plate: string | null;
+                brand: string | null;
+                model: string | null;
+                year: number | null;
+                owner: {
+                    name: string;
+                };
+            };
+            score: number | null;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
     createListing(dto: {
         brand: string;
         model: string;

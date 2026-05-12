@@ -75,12 +75,31 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
   const acceptsFinancing = watch('acceptsFinancing');
   const acceptsTrade = watch('acceptsTrade');
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      api.post('/admin/listings', {
-        ...data,
-        photoUrls: media.slice(0, 20).map((m) => m.preview),
-      }),
+    mutationFn: async (data: FormData) => {
+      // Upload photos to Supabase Storage first
+      let photoUrls: string[] = [];
+      if (media.length > 0) {
+        setIsUploading(true);
+        try {
+          photoUrls = await Promise.all(
+            media.slice(0, 20).map(async (m) => {
+              const form = new FormData();
+              form.append('file', m.file);
+              const { data: res } = await api.post('/admin/upload-photo', form, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+              });
+              return res.url as string;
+            }),
+          );
+        } finally {
+          setIsUploading(false);
+        }
+      }
+      return api.post('/admin/listings', { ...data, photoUrls });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
       toast.success('Anúncio publicado com sucesso!');
@@ -477,11 +496,11 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={handleSubmit((d) => mutation.mutate(d))}
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || isUploading}
               className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark disabled:opacity-70"
             >
-              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Publicar anúncio
+              {(mutation.isPending || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isUploading ? 'Enviando fotos...' : 'Publicar anúncio'}
             </button>
           )}
         </div>
