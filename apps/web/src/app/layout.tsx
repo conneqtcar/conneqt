@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { PwaRegister } from '@/components/pwa/pwa-register';
 import { BottomNav } from '@/components/mobile/bottom-nav';
+import { Footer } from '@/components/layout/footer';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <Providers>
           {children}
+          <Footer />
           <BottomNav />
           <PwaRegister />
         </Providers>
