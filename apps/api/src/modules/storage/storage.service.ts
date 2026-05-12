@@ -13,11 +13,11 @@ export class StorageService {
     this.bucket = configService.get<string>('SUPABASE_STORAGE_BUCKET', 'banners');
   }
 
-  /** Upload de um buffer diretamente para o Supabase Storage (bucket público). */
+  /** Upload de um buffer diretamente para o Supabase Storage (bucket publico). */
   async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<string> {
     if (!this.supabaseUrl || !this.serviceKey) {
       throw new InternalServerErrorException(
-        'Supabase Storage não configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.',
+        'Supabase Storage nao configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.',
       );
     }
 
@@ -35,7 +35,7 @@ export class StorageService {
 
     if (!res.ok) {
       const body = await res.text();
-      throw new InternalServerErrorException(`Supabase Storage error: ${res.status} – ${body}`);
+      throw new InternalServerErrorException(`Supabase Storage error: ${res.status} - ${body}`);
     }
 
     return this.getPublicUrl(key);
@@ -45,47 +45,8 @@ export class StorageService {
     return `${this.supabaseUrl}/storage/v1/object/public/${this.bucket}/${key}`;
   }
 
-  /** Mantido para compatibilidade com outros módulos que chamem presigned URL. */
+  /** Mantido para compatibilidade — nao usa presigned URL com Supabase. */
   async getPresignedPutUrl(_key: string, _contentType: string): Promise<string> {
     throw new InternalServerErrorException('Use uploadBuffer com Supabase Storage.');
   }
 }
-
-  async getPresignedPutUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: contentType,
-    });
-    return getSignedUrl(this.s3, command, { expiresIn });
-  }
-
-  async getPresignedGetUrl(key: string, expiresIn = 3600): Promise<string> {
-    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.s3, command, { expiresIn });
-  }
-
-  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<string> {
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-      ACL: 'public-read' as any,
-    });
-    await this.s3.send(command);
-    return this.getPublicUrl(key);
-  }
-
-  async deleteObject(key: string): Promise<void> {
-    await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
-  }
-
-  getPublicUrl(key: string): string {
-    if (this.cdnUrl) {
-      return `${this.cdnUrl}/${key}`;
-    }
-    return `https://${this.bucket}.s3.amazonaws.com/${key}`;
-  }
-}
-
