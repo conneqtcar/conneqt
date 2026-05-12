@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
@@ -20,8 +20,9 @@ type FormData = z.infer<typeof schema>;
 function EntrarForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') || '/vender';
+  const returnUrl = searchParams.get('returnUrl') || '/';
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   const {
     register,
@@ -45,61 +46,130 @@ function EntrarForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl bg-white p-8 shadow-lg">
-          <div className="mb-8 text-center">
-            <Link href="/" className="text-2xl font-bold text-brand-gold">Conneqt</Link>
-            <p className="mt-2 text-gray-500">Entre na sua conta</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08080F] px-4">
+
+      {/* Decoração de fundo */}
+      <div className="pointer-events-none absolute inset-0 select-none">
+        <div className="absolute -right-32 -top-32 h-[560px] w-[560px] rounded-full bg-[#C9A84C]/[0.12] blur-[110px]" />
+        <div className="absolute -bottom-40 -left-24 h-[480px] w-[480px] rounded-full bg-[#C9A84C]/[0.08] blur-[100px]" />
+
+        <svg
+          className="absolute inset-0 h-full w-full opacity-[0.055]"
+          viewBox="0 0 1440 900"
+          fill="none"
+          preserveAspectRatio="xMidYMid slice"
+        >
+          {[0.15, 0.28, 0.40, 0.52, 0.63, 0.73, 0.82, 0.90, 0.96, 1].map((t, i) => (
+            <line
+              key={`h${i}`}
+              x1={720 - 720 * t} y1={900 - 900 * t * 0.55}
+              x2={720 + 720 * t} y2={900 - 900 * t * 0.55}
+              stroke="#C9A84C" strokeWidth="0.6"
+            />
+          ))}
+          {Array.from({ length: 16 }, (_, i) => {
+            const angle = (i / 16) * Math.PI;
+            const x2 = 720 + Math.cos(angle) * 900;
+            const y2 = 900 + Math.sin(angle) * 600;
+            return <line key={`r${i}`} x1="720" y1="900" x2={x2} y2={y2} stroke="#C9A84C" strokeWidth="0.5" />;
+          })}
+        </svg>
+
+        <svg className="absolute -bottom-16 -right-16 h-[420px] w-[420px] opacity-[0.06]" viewBox="0 0 200 200" fill="none">
+          <circle cx="100" cy="100" r="95" stroke="#C9A84C" strokeWidth="1.2" />
+          <circle cx="100" cy="100" r="70" stroke="#C9A84C" strokeWidth="0.7" />
+          <circle cx="100" cy="100" r="22" stroke="#C9A84C" strokeWidth="1.5" />
+          {Array.from({ length: 5 }, (_, i) => {
+            const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+            return <line key={i} x1={100 + Math.cos(a) * 22} y1={100 + Math.sin(a) * 22} x2={100 + Math.cos(a) * 70} y2={100 + Math.sin(a) * 70} stroke="#C9A84C" strokeWidth="1.2" />;
+          })}
+        </svg>
+
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A84C]/40 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A84C]/20 to-transparent" />
+      </div>
+
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C9A84C]/60 to-transparent" />
+
+        <div className="rounded-b-2xl border border-t-0 border-[#C9A84C]/20 bg-white/[0.04] px-8 py-10 shadow-2xl shadow-black/60 backdrop-blur-xl">
+          {/* Logo */}
+          <div className="mb-10 flex flex-col items-center gap-3">
+            <Link href="/">
+              <img
+                src="/icons/logonome.png"
+                alt="Conneqt"
+                className="h-11 w-auto drop-shadow-[0_0_12px_rgba(201,168,76,0.4)]"
+              />
+            </Link>
+            <p className="text-sm text-white/40">Entre na sua conta</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700">E-mail</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50">
+                E-mail
+              </label>
               <input
                 {...register('email')}
                 type="email"
                 autoComplete="email"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20"
+                placeholder="seu@email.com"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-[#C9A84C]/60 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#C9A84C]/30"
               />
-              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+              {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Senha</label>
-              <input
-                {...register('password')}
-                type="password"
-                autoComplete="current-password"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20"
-              />
-              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50">
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  {...register('password')}
+                  type={showPass ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 pr-11 text-sm text-white placeholder-white/25 outline-none transition focus:border-[#C9A84C]/60 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#C9A84C]/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 transition hover:text-white/60"
+                >
+                  {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1.5 text-xs text-red-400">{errors.password.message}</p>}
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-gold py-3 font-medium text-white hover:bg-brand-gold-dark disabled:opacity-70"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#B8922A] to-[#D4A832] py-3 text-sm font-bold text-[#08080F] shadow-lg shadow-[#C9A84C]/20 transition hover:brightness-110 disabled:opacity-60"
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Entrar
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {loading ? 'Autenticando...' : 'Entrar'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="mt-6 text-center text-xs text-white/30">
             Não tem conta?{' '}
-            <Link href="/cadastro" className="font-medium text-brand-gold hover:underline">
+            <Link href="/cadastro" className="text-[#C9A84C]/70 transition hover:text-[#C9A84C]">
               Cadastre-se gratuitamente
             </Link>
           </p>
         </div>
+
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C9A84C]/30 to-transparent" />
       </div>
     </div>
   );
 }
+
 export default function EntrarPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-brand-gold" /></div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#08080F]"><Loader2 className="h-8 w-8 animate-spin text-[#C9A84C]" /></div>}>
       <EntrarForm />
     </Suspense>
   );

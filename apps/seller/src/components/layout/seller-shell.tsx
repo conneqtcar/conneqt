@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Car,
@@ -137,17 +137,43 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
 
 export function SellerShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const isAuthPage = pathname === '/entrar' || pathname.startsWith('/cadastrar');
+
+  useEffect(() => {
+    if (isAuthPage) {
+      setAuthChecked(true);
+      return;
+    }
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.replace('/entrar');
+    } else {
+      setAuthChecked(true);
+    }
+  }, [isAuthPage, router]);
 
   const { data: profile } = useQuery<SellerProfile>({
     queryKey: ['seller-profile'],
     queryFn: async () => { const { data } = await api.get('/seller/profile'); return data; },
-    enabled: pathname !== '/entrar',
+    enabled: authChecked && !isAuthPage,
   });
 
   // Tela de login não usa o shell
   if (pathname === '/entrar') {
     return <>{children}</>;
+  }
+
+  // Enquanto verifica autenticação, exibe fundo neutro para evitar flash
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-brand-gold" />
+      </div>
+    );
   }
 
   return (
