@@ -8,17 +8,24 @@ export declare class AuthController {
     register(dto: RegisterDto): Promise<{
         accessToken: string;
         refreshToken: string;
-        user: any;
+        user: {
+            name: string;
+            type: import("packages/database/dist/generated").$Enums.UserType;
+            email: string;
+            id: string;
+            kycStatus: import("packages/database/dist/generated").$Enums.KycStatus;
+            createdAt: Date;
+        };
     }>;
     login(dto: LoginDto): Promise<{
         accessToken: string;
         refreshToken: string;
         user: {
-            id: any;
-            email: any;
-            name: any;
-            type: any;
-            kycStatus: any;
+            id: string;
+            email: string;
+            name: string;
+            type: import("packages/database/dist/generated").$Enums.UserType;
+            kycStatus: import("packages/database/dist/generated").$Enums.KycStatus;
         };
     }>;
     logout(req: {

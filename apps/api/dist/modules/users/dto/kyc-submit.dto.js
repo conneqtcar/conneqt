@@ -10,11 +10,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.KycSubmitDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class KycSubmitDto {
     cpf;
     selfieUrl;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { cpf: { required: true, type: () => String, pattern: "/^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$/" }, selfieUrl: { required: true, type: () => String } };
+    }
 }
 exports.KycSubmitDto = KycSubmitDto;
 __decorate([

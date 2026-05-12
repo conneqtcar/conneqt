@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -51,6 +52,7 @@ exports.AdminController = AdminController;
 __decorate([
     (0, common_1.Get)('dashboard'),
     (0, swagger_1.ApiOperation)({ summary: 'Dashboard — métricas em tempo real' }),
+    openapi.ApiResponse({ status: 200 }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -58,6 +60,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('users'),
     (0, swagger_1.ApiOperation)({ summary: 'Listar todos os usuários (admin)' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
@@ -67,6 +70,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('users/:id/block'),
     (0, swagger_1.ApiOperation)({ summary: 'Bloquear usuário' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -76,6 +80,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('users/:id/kyc/approve'),
     (0, swagger_1.ApiOperation)({ summary: 'Aprovar KYC de usuário' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -84,6 +89,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('users/:id/kyc/reject'),
     (0, swagger_1.ApiOperation)({ summary: 'Reprovar KYC de usuário' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -93,6 +99,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('dealers'),
     (0, swagger_1.ApiOperation)({ summary: 'Cadastrar lojista manualmente (admin)' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -101,6 +108,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('listings'),
     (0, swagger_1.ApiOperation)({ summary: 'Criar anúncio manualmente (admin)' }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -109,6 +117,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('listings/:id/deactivate'),
     (0, swagger_1.ApiOperation)({ summary: 'Desativar anúncio (admin)' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

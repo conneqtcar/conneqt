@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VehiclesController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -44,6 +45,7 @@ exports.VehiclesController = VehiclesController;
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Cadastrar novo veículo' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -53,6 +55,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('mine'),
     (0, swagger_1.ApiOperation)({ summary: 'Listar meus veículos' }),
+    openapi.ApiResponse({ status: 200, type: [Object] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -61,6 +64,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('fipe'),
     (0, swagger_1.ApiOperation)({ summary: 'Consultar dados FIPE por placa' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Query)('plate')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -69,6 +73,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Detalhes de um veículo' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -77,6 +82,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Atualizar dados do veículo' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)()),

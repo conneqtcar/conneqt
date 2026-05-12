@@ -27,6 +27,7 @@ const storage_module_1 = require("./modules/storage/storage.module");
 const notifications_module_1 = require("./modules/notifications/notifications.module");
 const chat_module_1 = require("./modules/chat/chat.module");
 const database_module_1 = require("./modules/database/database.module");
+const banners_module_1 = require("./modules/banners/banners.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -68,6 +69,7 @@ exports.AppModule = AppModule = __decorate([
             storage_module_1.StorageModule,
             notifications_module_1.NotificationsModule,
             chat_module_1.ChatModule,
+            banners_module_1.BannersModule,
         ],
     })
 ], AppModule);

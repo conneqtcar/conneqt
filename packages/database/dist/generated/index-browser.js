@@ -263,6 +263,16 @@ exports.Prisma.DealerListingScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.BannerScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  imageUrl: 'imageUrl',
+  order: 'order',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -394,7 +404,8 @@ exports.Prisma.ModelName = {
   Proposal: 'Proposal',
   ChatMessage: 'ChatMessage',
   Dealer: 'Dealer',
-  DealerListing: 'DealerListing'
+  DealerListing: 'DealerListing',
+  Banner: 'Banner'
 };
 
 /**

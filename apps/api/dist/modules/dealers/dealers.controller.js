@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DealersController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -37,6 +38,7 @@ exports.DealersController = DealersController;
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Cadastrar como lojista' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -46,6 +48,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('me'),
     (0, swagger_1.ApiOperation)({ summary: 'Perfil do lojista do usuário autenticado' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -54,6 +57,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Detalhes de um lojista' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

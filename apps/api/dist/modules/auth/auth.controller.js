@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
@@ -49,6 +50,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Cadastro de novo usuário' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Usuário criado com sucesso.' }),
     (0, swagger_1.ApiResponse)({ status: 409, description: 'E-mail já cadastrado.' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
@@ -60,6 +62,7 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Login com e-mail e senha' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Login realizado com sucesso.' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Credenciais inválidas.' }),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
@@ -71,6 +74,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Encerrar sessão' }),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -81,6 +85,7 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, swagger_1.ApiOperation)({ summary: 'Renovar access token via refresh token' }),
+    openapi.ApiResponse({ status: common_1.HttpStatus.OK }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -92,6 +97,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Dados do usuário autenticado' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

@@ -11,17 +11,24 @@ export declare class AuthService {
     register(dto: RegisterDto): Promise<{
         accessToken: string;
         refreshToken: string;
-        user: any;
+        user: {
+            name: string;
+            type: import("packages/database/dist/generated").$Enums.UserType;
+            email: string;
+            id: string;
+            kycStatus: import("packages/database/dist/generated").$Enums.KycStatus;
+            createdAt: Date;
+        };
     }>;
     login(dto: LoginDto): Promise<{
         accessToken: string;
         refreshToken: string;
         user: {
-            id: any;
-            email: any;
-            name: any;
-            type: any;
-            kycStatus: any;
+            id: string;
+            email: string;
+            name: string;
+            type: import("packages/database/dist/generated").$Enums.UserType;
+            kycStatus: import("packages/database/dist/generated").$Enums.KycStatus;
         };
     }>;
     logout(userId: string): Promise<{
@@ -31,7 +38,24 @@ export declare class AuthService {
         accessToken: string;
         refreshToken: string;
     }>;
-    validateUser(email: string, password: string): Promise<any>;
+    validateUser(email: string, password: string): Promise<{
+        name: string;
+        type: import("packages/database/dist/generated").$Enums.UserType;
+        email: string;
+        phone: string | null;
+        id: string;
+        cpf: string | null;
+        status: import("packages/database/dist/generated").$Enums.UserStatus;
+        kycStatus: import("packages/database/dist/generated").$Enums.KycStatus;
+        avatarUrl: string | null;
+        kycSubmittedAt: Date | null;
+        kycApprovedAt: Date | null;
+        kycRejectionReason: string | null;
+        blockReason: string | null;
+        lastLoginAt: Date | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
     private generateTokens;
     private storeRefreshToken;
 }

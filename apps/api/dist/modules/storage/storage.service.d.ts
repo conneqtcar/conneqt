@@ -1,13 +1,12 @@
 import { ConfigService } from '@nestjs/config';
 export declare class StorageService {
     private readonly configService;
-    private readonly s3;
+    private readonly supabaseUrl;
+    private readonly serviceKey;
     private readonly bucket;
-    private readonly cdnUrl;
     constructor(configService: ConfigService);
-    getPresignedPutUrl(key: string, contentType: string, expiresIn?: number): Promise<string>;
-    getPresignedGetUrl(key: string, expiresIn?: number): Promise<string>;
-    deleteObject(key: string): Promise<void>;
+    uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<string>;
     getPublicUrl(key: string): string;
+    getPresignedPutUrl(_key: string, _contentType: string): Promise<string>;
 }
 //# sourceMappingURL=storage.service.d.ts.map

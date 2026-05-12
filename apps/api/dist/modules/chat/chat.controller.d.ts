@@ -6,6 +6,23 @@ export declare class ChatController {
         user: {
             sub: string;
         };
-    }): Promise<any>;
+    }): Promise<{
+        listingId: string;
+        price: number;
+        status: import("packages/database/dist/generated").$Enums.ListingStatus;
+        vehicle: {
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+        };
+        lastMessage: {
+            createdAt: Date;
+            content: string;
+            sender: {
+                name: string;
+                id: string;
+            };
+        };
+    }[]>;
 }
 //# sourceMappingURL=chat.controller.d.ts.map

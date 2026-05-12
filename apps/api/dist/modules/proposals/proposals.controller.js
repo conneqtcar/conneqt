@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProposalsController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -41,6 +42,7 @@ exports.ProposalsController = ProposalsController;
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Enviar proposta de compra' }),
+    openapi.ApiResponse({ status: 201, type: Object }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -50,6 +52,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('mine'),
     (0, swagger_1.ApiOperation)({ summary: 'Propostas enviadas pelo comprador' }),
+    openapi.ApiResponse({ status: 200, type: [Object] }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -58,6 +61,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('listing/:listingId'),
     (0, swagger_1.ApiOperation)({ summary: 'Propostas recebidas para um anúncio (vendedor)' }),
+    openapi.ApiResponse({ status: 200, type: [Object] }),
     __param(0, (0, common_1.Param)('listingId')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -67,6 +71,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id/respond'),
     (0, swagger_1.ApiOperation)({ summary: 'Aceitar, recusar ou fazer contra-proposta' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)()),

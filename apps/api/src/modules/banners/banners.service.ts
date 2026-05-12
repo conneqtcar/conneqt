@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { PrismaClient } from '@conneqtcar/database';
+import { PRISMA_SERVICE } from '../database/database.module';
 
 @Injectable()
 export class BannersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PRISMA_SERVICE) private readonly prisma: PrismaClient) {}
 
   /** Listagem pública — apenas banners ativos, ordenados */
   findActive() {

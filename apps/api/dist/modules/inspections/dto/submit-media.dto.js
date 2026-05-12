@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubmitMediaDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
@@ -19,6 +20,9 @@ class MediaItemDto {
     key;
     hash;
     metadata;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { type: { required: true, type: () => Object }, url: { required: true, type: () => String }, key: { required: true, type: () => String }, hash: { required: true, type: () => String }, metadata: { required: false, type: () => Object } };
+    }
 }
 __decorate([
     (0, swagger_1.ApiProperty)({ enum: ['PHOTO', 'VIDEO', 'DOCUMENT'] }),
@@ -47,6 +51,9 @@ __decorate([
 ], MediaItemDto.prototype, "metadata", void 0);
 class SubmitMediaDto {
     media;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { media: { required: true, type: () => [MediaItemDto] } };
+    }
 }
 exports.SubmitMediaDto = SubmitMediaDto;
 __decorate([

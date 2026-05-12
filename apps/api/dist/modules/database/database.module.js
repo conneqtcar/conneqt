@@ -20,7 +20,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
         providers: [
             {
                 provide: exports.PRISMA_SERVICE,
-                useFactory: (configService) => {
+                useFactory: async (configService) => {
                     const prisma = new database_1.PrismaClient({
                         datasources: {
                             db: { url: configService.get('DATABASE_URL') },
@@ -29,6 +29,8 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                             ? ['query', 'warn', 'error']
                             : ['warn', 'error'],
                     });
+                    await prisma.$connect();
+                    new common_1.Logger('DatabaseModule').log('Prisma conectado ao banco de dados.');
                     return prisma;
                 },
                 inject: [config_1.ConfigService],

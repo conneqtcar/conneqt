@@ -13,6 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
+const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -41,6 +42,7 @@ exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)('me'),
     (0, swagger_1.ApiOperation)({ summary: 'Perfil do usuário autenticado' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -49,6 +51,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('me'),
     (0, swagger_1.ApiOperation)({ summary: 'Atualizar dados do perfil' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -58,6 +61,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('me/kyc'),
     (0, swagger_1.ApiOperation)({ summary: 'Submeter dados para verificação KYC' }),
+    openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -67,6 +71,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Buscar usuário por ID' }),
+    openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

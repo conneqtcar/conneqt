@@ -12,45 +12,42 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StorageService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const client_s3_1 = require("@aws-sdk/client-s3");
-const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 let StorageService = class StorageService {
     configService;
-    s3;
+    supabaseUrl;
+    serviceKey;
     bucket;
-    cdnUrl;
     constructor(configService) {
         this.configService = configService;
-        this.s3 = new client_s3_1.S3Client({
-            region: configService.get('AWS_REGION', 'us-east-1'),
-            credentials: {
-                accessKeyId: configService.get('AWS_ACCESS_KEY_ID', ''),
-                secretAccessKey: configService.get('AWS_SECRET_ACCESS_KEY', ''),
+        this.supabaseUrl = configService.get('SUPABASE_URL', '');
+        this.serviceKey = configService.get('SUPABASE_SERVICE_ROLE_KEY', '');
+        this.bucket = configService.get('SUPABASE_STORAGE_BUCKET', 'banners');
+    }
+    async uploadBuffer(key, buffer, contentType) {
+        if (!this.supabaseUrl || !this.serviceKey) {
+            throw new common_1.InternalServerErrorException('Supabase Storage nao configurado. Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.');
+        }
+        const url = `${this.supabaseUrl}/storage/v1/object/${this.bucket}/${key}`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${this.serviceKey}`,
+                'Content-Type': contentType,
+                'x-upsert': 'true',
             },
+            body: buffer,
         });
-        this.bucket = configService.get('AWS_S3_BUCKET', 'conneqtcar-media-dev');
-        this.cdnUrl = configService.get('AWS_CLOUDFRONT_URL', '');
-    }
-    async getPresignedPutUrl(key, contentType, expiresIn = 3600) {
-        const command = new client_s3_1.PutObjectCommand({
-            Bucket: this.bucket,
-            Key: key,
-            ContentType: contentType,
-        });
-        return (0, s3_request_presigner_1.getSignedUrl)(this.s3, command, { expiresIn });
-    }
-    async getPresignedGetUrl(key, expiresIn = 3600) {
-        const command = new client_s3_1.GetObjectCommand({ Bucket: this.bucket, Key: key });
-        return (0, s3_request_presigner_1.getSignedUrl)(this.s3, command, { expiresIn });
-    }
-    async deleteObject(key) {
-        await this.s3.send(new client_s3_1.DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+        if (!res.ok) {
+            const body = await res.text();
+            throw new common_1.InternalServerErrorException(`Supabase Storage error: ${res.status} - ${body}`);
+        }
+        return this.getPublicUrl(key);
     }
     getPublicUrl(key) {
-        if (this.cdnUrl) {
-            return `${this.cdnUrl}/${key}`;
-        }
-        return `https://${this.bucket}.s3.amazonaws.com/${key}`;
+        return `${this.supabaseUrl}/storage/v1/object/public/${this.bucket}/${key}`;
+    }
+    async getPresignedPutUrl(_key, _contentType) {
+        throw new common_1.InternalServerErrorException('Use uploadBuffer com Supabase Storage.');
     }
 };
 exports.StorageService = StorageService;

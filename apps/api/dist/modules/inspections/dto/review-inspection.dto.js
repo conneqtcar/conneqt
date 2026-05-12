@@ -10,12 +10,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReviewInspectionDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class ReviewInspectionDto {
     approved;
     score;
     notes;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { approved: { required: true, type: () => Boolean }, score: { required: false, type: () => Number, minimum: 0, maximum: 100 }, notes: { required: false, type: () => String } };
+    }
 }
 exports.ReviewInspectionDto = ReviewInspectionDto;
 __decorate([

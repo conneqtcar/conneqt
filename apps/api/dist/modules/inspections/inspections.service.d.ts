@@ -9,20 +9,105 @@ export declare class InspectionsService {
     private readonly storageService;
     private readonly eventEmitter;
     constructor(prisma: PrismaClient, storageService: StorageService, eventEmitter: EventEmitter2);
-    create(ownerId: string, dto: CreateInspectionDto): Promise<any>;
+    create(ownerId: string, dto: CreateInspectionDto): Promise<{
+        type: import("packages/database/dist/generated").$Enums.InspectionType;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        vehicleId: string;
+        score: number | null;
+        reviewerId: string | null;
+        reviewedAt: Date | null;
+        reviewNotes: string | null;
+        aiFlags: string[];
+        aiProcessedAt: Date | null;
+    }>;
     getUploadUrl(inspectionId: string, ownerId: string, fileName: string, mimeType: string): Promise<{
         uploadUrl: string;
         key: string;
     }>;
     submitMedia(inspectionId: string, ownerId: string, dto: SubmitMediaDto): Promise<{
         message: string;
-        count: any;
+        count: number;
     }>;
-    getStatus(inspectionId: string): Promise<any>;
-    reviewByAdmin(inspectionId: string, reviewerId: string, dto: ReviewInspectionDto): Promise<any>;
+    getStatus(inspectionId: string): Promise<{
+        items: {
+            id: string;
+            createdAt: Date;
+            result: string;
+            score: number | null;
+            inspectionId: string;
+            category: string;
+            item: string;
+            notes: string | null;
+        }[];
+        reviewer: {
+            name: string;
+            id: string;
+        } | null;
+        media: {
+            type: import("packages/database/dist/generated").$Enums.MediaType;
+            id: string;
+            url: string;
+        }[];
+    } & {
+        type: import("packages/database/dist/generated").$Enums.InspectionType;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        vehicleId: string;
+        score: number | null;
+        reviewerId: string | null;
+        reviewedAt: Date | null;
+        reviewNotes: string | null;
+        aiFlags: string[];
+        aiProcessedAt: Date | null;
+    }>;
+    reviewByAdmin(inspectionId: string, reviewerId: string, dto: ReviewInspectionDto): Promise<{
+        type: import("packages/database/dist/generated").$Enums.InspectionType;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        vehicleId: string;
+        score: number | null;
+        reviewerId: string | null;
+        reviewedAt: Date | null;
+        reviewNotes: string | null;
+        aiFlags: string[];
+        aiProcessedAt: Date | null;
+    }>;
     getPendingReviewQueue(page?: number, limit?: number): Promise<{
-        data: any;
-        total: any;
+        data: ({
+            vehicle: {
+                id: string;
+                plate: string | null;
+                brand: string | null;
+                model: string | null;
+                year: number | null;
+            };
+            media: {
+                type: import("packages/database/dist/generated").$Enums.MediaType;
+                id: string;
+                url: string;
+            }[];
+        } & {
+            type: import("packages/database/dist/generated").$Enums.InspectionType;
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            vehicleId: string;
+            score: number | null;
+            reviewerId: string | null;
+            reviewedAt: Date | null;
+            reviewNotes: string | null;
+            aiFlags: string[];
+            aiProcessedAt: Date | null;
+        })[];
+        total: number;
         page: number;
         limit: number;
         totalPages: number;

@@ -10,12 +10,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateDealerDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class CreateDealerDto {
     companyName;
     cnpj;
     plan;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { companyName: { required: true, type: () => String }, cnpj: { required: true, type: () => String, pattern: "/^\\d{2}\\.\\d{3}\\.\\d{3}\\/\\d{4}-\\d{2}$/" }, plan: { required: false, type: () => Object } };
+    }
 }
 exports.CreateDealerDto = CreateDealerDto;
 __decorate([

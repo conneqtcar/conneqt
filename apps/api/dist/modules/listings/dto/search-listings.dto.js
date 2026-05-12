@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SearchListingsDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
@@ -26,6 +27,9 @@ class SearchListingsDto {
     transmission;
     page;
     limit;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { brand: { required: false, type: () => String }, model: { required: false, type: () => String }, yearMin: { required: false, type: () => Number }, yearMax: { required: false, type: () => Number }, priceMin: { required: false, type: () => Number }, priceMax: { required: false, type: () => Number }, mileageMax: { required: false, type: () => Number }, city: { required: false, type: () => String }, fuelType: { required: false, type: () => String }, transmission: { required: false, type: () => String }, page: { required: false, type: () => Number, minimum: 1 }, limit: { required: false, type: () => Number, minimum: 1, maximum: 100 } };
+    }
 }
 exports.SearchListingsDto = SearchListingsDto;
 __decorate([

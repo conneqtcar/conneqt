@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateVehicleDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class CreateVehicleDto {
@@ -23,6 +24,9 @@ class CreateVehicleDto {
     mileage;
     fuelType;
     transmission;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { plate: { required: false, type: () => String }, chassis: { required: false, type: () => String }, renavam: { required: false, type: () => String }, brand: { required: false, type: () => String }, model: { required: false, type: () => String }, year: { required: false, type: () => Number, minimum: 1900 }, color: { required: false, type: () => String }, mileage: { required: true, type: () => Number, minimum: 0 }, fuelType: { required: false, type: () => String }, transmission: { required: false, type: () => String } };
+    }
 }
 exports.CreateVehicleDto = CreateVehicleDto;
 __decorate([

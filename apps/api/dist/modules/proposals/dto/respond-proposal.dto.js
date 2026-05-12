@@ -10,11 +10,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RespondProposalDto = void 0;
+const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class RespondProposalDto {
     action;
     counterAmount;
+    static _OPENAPI_METADATA_FACTORY() {
+        return { action: { required: true, type: () => Object }, counterAmount: { required: false, type: () => Number, minimum: 1 } };
+    }
 }
 exports.RespondProposalDto = RespondProposalDto;
 __decorate([

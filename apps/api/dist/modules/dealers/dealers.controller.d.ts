@@ -7,12 +7,63 @@ export declare class DealersController {
         user: {
             sub: string;
         };
-    }, dto: CreateDealerDto): Promise<any>;
+    }, dto: CreateDealerDto): Promise<{
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.DealerStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        companyName: string;
+        cnpj: string;
+        plan: import("packages/database/dist/generated").$Enums.DealerPlan;
+        commissionRate: number;
+    }>;
     findMine(req: {
         user: {
             sub: string;
         };
-    }): Promise<any>;
-    findOne(id: string): Promise<any>;
+    }): Promise<({
+        user: {
+            name: string;
+            id: string;
+        };
+    } & {
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.DealerStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        companyName: string;
+        cnpj: string;
+        plan: import("packages/database/dist/generated").$Enums.DealerPlan;
+        commissionRate: number;
+    }) | null>;
+    findOne(id: string): Promise<{
+        user: {
+            name: string;
+            email: string;
+            id: string;
+        };
+        listings: {
+            id: string;
+            listing: {
+                vehicle: {
+                    brand: string | null;
+                    model: string | null;
+                };
+                price: number;
+            };
+        }[];
+    } & {
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.DealerStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        companyName: string;
+        cnpj: string;
+        plan: import("packages/database/dist/generated").$Enums.DealerPlan;
+        commissionRate: number;
+    }>;
 }
 //# sourceMappingURL=dealers.controller.d.ts.map
