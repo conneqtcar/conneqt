@@ -137,11 +137,18 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
 
 export function SellerShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   const { data: profile } = useQuery<SellerProfile>({
     queryKey: ['seller-profile'],
     queryFn: async () => { const { data } = await api.get('/seller/profile'); return data; },
+    enabled: pathname !== '/entrar',
   });
+
+  // Tela de login não usa o shell
+  if (pathname === '/entrar') {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -16,7 +16,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function AdminLoginPage() {
+export default function SellerLoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -33,13 +33,8 @@ export default function AdminLoginPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
       const { data } = await axios.post(`${baseUrl}/auth/login`, values);
 
-      if (data.user.type !== 'ADMIN') {
-        toast.error('Acesso restrito a administradores.');
-        return;
-      }
-
-      localStorage.setItem('admin_access_token', data.accessToken);
-      localStorage.setItem('admin_refresh_token', data.refreshToken);
+      localStorage.setItem('access_token', data.accessToken);
+      localStorage.setItem('refresh_token', data.refreshToken);
       router.replace('/');
     } catch {
       toast.error('E-mail ou senha incorretos.');
@@ -65,8 +60,7 @@ export default function AdminLoginPage() {
           fill="none"
           preserveAspectRatio="xMidYMid slice"
         >
-          {/* Linhas horizontais de perspectiva */}
-          {[0.15,0.28,0.40,0.52,0.63,0.73,0.82,0.90,0.96,1].map((t, i) => (
+          {[0.15, 0.28, 0.40, 0.52, 0.63, 0.73, 0.82, 0.90, 0.96, 1].map((t, i) => (
             <line
               key={`h${i}`}
               x1={720 - 720 * t}
@@ -77,7 +71,6 @@ export default function AdminLoginPage() {
               strokeWidth="0.6"
             />
           ))}
-          {/* Linhas radiais convergindo para ponto de fuga */}
           {Array.from({ length: 16 }, (_, i) => {
             const angle = (i / 16) * Math.PI;
             const x2 = 720 + Math.cos(angle) * 900;
@@ -88,7 +81,7 @@ export default function AdminLoginPage() {
           })}
         </svg>
 
-        {/* Silhueta de roda de carro — decorativa */}
+        {/* Roda decorativa — direita */}
         <svg
           className="absolute -bottom-16 -right-16 h-[420px] w-[420px] opacity-[0.06]"
           viewBox="0 0 200 200"
@@ -102,18 +95,15 @@ export default function AdminLoginPage() {
             return (
               <line
                 key={i}
-                x1={100 + Math.cos(a) * 22}
-                y1={100 + Math.sin(a) * 22}
-                x2={100 + Math.cos(a) * 70}
-                y2={100 + Math.sin(a) * 70}
-                stroke="#C9A84C"
-                strokeWidth="1.2"
+                x1={100 + Math.cos(a) * 22} y1={100 + Math.sin(a) * 22}
+                x2={100 + Math.cos(a) * 70} y2={100 + Math.sin(a) * 70}
+                stroke="#C9A84C" strokeWidth="1.2"
               />
             );
           })}
         </svg>
 
-        {/* Silhueta de roda menor — esquerda */}
+        {/* Roda decorativa — esquerda */}
         <svg
           className="absolute -left-20 top-1/3 h-[260px] w-[260px] opacity-[0.04]"
           viewBox="0 0 200 200"
@@ -134,14 +124,12 @@ export default function AdminLoginPage() {
           })}
         </svg>
 
-        {/* Linha dourada horizontal decorativa */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A84C]/40 to-transparent" />
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C9A84C]/20 to-transparent" />
       </div>
 
       {/* ── Card de login ── */}
       <div className="relative z-10 mx-4 w-full max-w-md">
-        {/* Borda dourada superior */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C9A84C]/60 to-transparent" />
 
         <div className="rounded-b-2xl rounded-t-none border border-t-0 border-[#C9A84C]/20 bg-white/[0.04] px-8 py-10 shadow-2xl shadow-black/60 backdrop-blur-xl">
@@ -153,7 +141,7 @@ export default function AdminLoginPage() {
               className="h-11 w-auto drop-shadow-[0_0_12px_rgba(201,168,76,0.4)]"
             />
             <span className="rounded-full border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-3 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-[#C9A84C]">
-              Painel Administrativo
+              Painel do Vendedor
             </span>
           </div>
 
@@ -166,7 +154,7 @@ export default function AdminLoginPage() {
                 {...register('email')}
                 type="email"
                 autoComplete="email"
-                placeholder="admin@conneqtcar.com.br"
+                placeholder="seu@email.com"
                 className="w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition focus:border-[#C9A84C]/60 focus:bg-white/[0.08] focus:ring-1 focus:ring-[#C9A84C]/30"
               />
               {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>}
@@ -197,15 +185,24 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#B8922A] to-[#D4A832] py-3 text-sm font-bold text-[#08080F] shadow-lg shadow-[#C9A84C]/20 transition hover:brightness-110 disabled:opacity-60"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#B8922A] to-[#D4A832] py-3 text-sm font-bold text-[#08080F] shadow-lg shadow-[#C9A84C]/20 transition hover:brightness-110 disabled:opacity-60"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {loading ? 'Autenticando...' : 'Entrar'}
             </button>
           </form>
+
+          <p className="mt-6 text-center text-xs text-white/30">
+            Ainda não tem conta?{' '}
+            <a
+              href={`${process.env.NEXT_PUBLIC_WEB_URL ?? 'https://conneqtcar.com'}/cadastro`}
+              className="text-[#C9A84C]/70 transition hover:text-[#C9A84C]"
+            >
+              Cadastre-se
+            </a>
+          </p>
         </div>
 
-        {/* Linha dourada inferior */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C9A84C]/30 to-transparent" />
 
         <p className="mt-6 text-center text-xs text-white/20">

@@ -22,4 +22,21 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (
+      !IS_DEMO &&
+      error?.response?.status === 401 &&
+      typeof window !== 'undefined' &&
+      !window.location.pathname.startsWith('/entrar')
+    ) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/entrar';
+    }
+    return Promise.reject(error);
+  },
+);
+
 export default api;
