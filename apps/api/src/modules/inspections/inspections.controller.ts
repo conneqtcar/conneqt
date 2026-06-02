@@ -8,14 +8,17 @@ import {
   Request,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { InspectionsService } from './inspections.service';
 import { CreateInspectionDto } from './dto/create-inspection.dto';
 import { SubmitMediaDto } from './dto/submit-media.dto';
 import { ReviewInspectionDto } from './dto/review-inspection.dto';
-import { GetUploadUrlDto } from './dto/get-upload-url.dto';
 
 @ApiTags('inspections')
 @ApiBearerAuth()
@@ -33,14 +36,23 @@ export class InspectionsController {
     return this.inspectionsService.create(req.user.sub, dto);
   }
 
-  @Post(':id/upload-url')
-  @ApiOperation({ summary: 'Obter URL pré-assinada para upload de mídia' })
-  getUploadUrl(
+  @Post(':id/upload-media')
+  @ApiOperation({ summary: 'Upload direto de foto de inspeção' })
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 20 * 1024 * 1024 } }))
+  async uploadMedia(
     @Param('id') id: string,
     @Request() req: { user: { sub: string } },
-    @Body() dto: GetUploadUrlDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: { label?: string; sortOrder?: string },
   ) {
-    return this.inspectionsService.getUploadUrl(id, req.user.sub, dto.fileName, dto.mimeType);
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado.');
+    return this.inspectionsService.uploadMediaFile(
+      id,
+      req.user.sub,
+      file,
+      body.label ?? '',
+      body.sortOrder ? parseInt(body.sortOrder, 10) : 0,
+    );
   }
 
   @Post(':id/media')

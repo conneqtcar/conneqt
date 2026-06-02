@@ -46,13 +46,39 @@ export class InspectionsService {
     });
   }
 
-  async getUploadUrl(inspectionId: string, ownerId: string, fileName: string, mimeType: string) {
+  async uploadMediaFile(
+    inspectionId: string,
+    ownerId: string,
+    file: Express.Multer.File,
+    label: string,
+    sortOrder: number,
+  ) {
     const inspection = await this.assertOwnership(inspectionId, ownerId);
 
-    const key = `inspections/${inspectionId}/${Date.now()}-${fileName}`;
-    const presignedUrl = await this.storageService.getPresignedPutUrl(key, mimeType);
+    if (inspection.status === 'APPROVED' || inspection.status === 'REJECTED') {
+      throw new BadRequestException('Esta inspeção já foi finalizada.');
+    }
 
-    return { uploadUrl: presignedUrl, key };
+    const key = `inspections/${inspectionId}/${Date.now()}-${file.originalname}`;
+    const url = await this.storageService.uploadBuffer(key, file.buffer, file.mimetype);
+
+    await this.prisma.inspection.update({
+      where: { id: inspectionId },
+      data: { status: 'IN_PROGRESS' },
+    });
+
+    const media = await this.prisma.inspectionMedia.create({
+      data: {
+        inspectionId,
+        type: 'PHOTO',
+        url,
+        key,
+        hash: key,
+        metadata: { label, sortOrder },
+      },
+    });
+
+    return { url, mediaId: media.id };
   }
 
   async submitMedia(inspectionId: string, ownerId: string, dto: SubmitMediaDto) {

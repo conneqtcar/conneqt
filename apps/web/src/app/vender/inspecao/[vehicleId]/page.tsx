@@ -22,12 +22,6 @@ const UPLOAD_STEPS = [
   { label: 'Documento (CRLV)', hint: 'Documento do veículo com placa visível' },
 ];
 
-interface UploadUrlResponse {
-  uploadUrl: string;
-  key: string;
-  publicUrl: string;
-}
-
 export default function InspecaoPage() {
   const { vehicleId } = useParams<{ vehicleId: string }>();
   const router = useRouter();
@@ -54,29 +48,13 @@ export default function InspecaoPage() {
 
     setUploading(true);
     try {
-      // 1. Obter URL presignada do S3
-      const { data: urlData }: { data: UploadUrlResponse } = await api.post(
-        `/inspections/${inspection.id}/upload-url`,
-        {
-          fileName: file.name,
-          contentType: file.type,
-          label: UPLOAD_STEPS[stepIndex].label,
-        },
-      );
+      const form = new FormData();
+      form.append('file', file);
+      form.append('label', UPLOAD_STEPS[stepIndex].label);
+      form.append('sortOrder', String(stepIndex));
 
-      // 2. Upload direto para o S3
-      await fetch(urlData.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-
-      // 3. Registrar mídia na API
-      await api.post(`/inspections/${inspection.id}/media`, {
-        url: urlData.publicUrl,
-        type: 'PHOTO',
-        label: UPLOAD_STEPS[stepIndex].label,
-        sortOrder: stepIndex,
+      await api.post(`/inspections/${inspection.id}/upload-media`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       setCurrentStep((s) => s + 1);

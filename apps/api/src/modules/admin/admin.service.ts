@@ -171,31 +171,38 @@ export class AdminService {
     return { data: inspections, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async createListing(dto: {
-    brand: string;
-    model: string;
-    year: number;
-    color: string;
-    mileage: number;
-    fuelType: string;
-    transmission: string;
-    bodyType?: string;
-    doors?: number;
-    plate?: string;
-    chassis?: string;
-    renavam?: string;
-    price: number;
-    description?: string;
-    acceptsFinancing: boolean;
-    acceptsTrade: boolean;
-    sellerEmail?: string;
-    photoUrls?: string[];
-  }) {
+  async createListing(
+    dto: {
+      brand: string;
+      model: string;
+      year: number;
+      color: string;
+      mileage: number;
+      fuelType: string;
+      transmission: string;
+      bodyType?: string;
+      doors?: number;
+      plate?: string;
+      chassis?: string;
+      renavam?: string;
+      price: number;
+      description?: string;
+      acceptsFinancing: boolean;
+      acceptsTrade: boolean;
+      sellerEmail?: string;
+      photoUrls?: string[];
+    },
+    adminUserId: string,
+  ) {
     // Resolve seller
     let seller = dto.sellerEmail
       ? await this.prisma.user.findUnique({ where: { email: dto.sellerEmail } })
       : null;
 
+    if (!seller) {
+      // Use the authenticated admin's own account first
+      seller = await this.prisma.user.findUnique({ where: { id: adminUserId } });
+    }
     if (!seller) {
       seller = await this.prisma.user.findFirst({ where: { type: 'ADMIN' } });
     }

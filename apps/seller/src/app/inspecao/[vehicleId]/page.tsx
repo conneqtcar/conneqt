@@ -38,11 +38,6 @@ const UPLOAD_STEPS = [
   { label: 'Documento (CRLV)',        hint: 'Documento do veículo com placa visível' },
 ];
 
-interface UploadUrlResponse {
-  uploadUrl: string;
-  key: string;
-  publicUrl: string;
-}
 
 export default function InspecaoPage() {
   const { vehicleId } = useParams<{ vehicleId: string }>();
@@ -84,26 +79,13 @@ export default function InspecaoPage() {
 
     setUploading(true);
     try {
-      const { data: urlData }: { data: UploadUrlResponse } = await api.post(
-        `/inspections/${inspection!.id}/upload-url`,
-        {
-          fileName: file.name,
-          contentType: file.type,
-          label: UPLOAD_STEPS[stepIndex].label,
-        },
-      );
+      const form = new FormData();
+      form.append('file', file);
+      form.append('label', UPLOAD_STEPS[stepIndex].label);
+      form.append('sortOrder', String(stepIndex));
 
-      await fetch(urlData.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
-      });
-
-      await api.post(`/inspections/${inspection!.id}/media`, {
-        url: urlData.publicUrl,
-        type: 'PHOTO',
-        label: UPLOAD_STEPS[stepIndex].label,
-        sortOrder: stepIndex,
+      await api.post(`/inspections/${inspection!.id}/upload-media`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       setCurrentStep((s) => s + 1);

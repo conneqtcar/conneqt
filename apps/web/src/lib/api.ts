@@ -8,6 +8,7 @@ export const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: !IS_DEMO,
+  timeout: 10000,
   ...(IS_DEMO && { adapter: demoAdapter }),
 });
 
@@ -46,7 +47,8 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         if (typeof window !== 'undefined') {
-          window.location.href = '/entrar';
+          const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.href = `/entrar?returnUrl=${returnUrl}&motivo=sessao-expirada`;
         }
       }
     }

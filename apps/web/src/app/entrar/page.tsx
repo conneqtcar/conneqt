@@ -6,9 +6,10 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import api from '@/lib/api';
 
 const schema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -21,6 +22,7 @@ function EntrarForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';
+  const motivo = searchParams.get('motivo');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
@@ -33,13 +35,16 @@ function EntrarForm() {
   const onSubmit = async (values: FormData) => {
     setLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-      const { data } = await axios.post(`${baseUrl}/api/v1/auth/login`, values);
+      const { data } = await api.post('/auth/login', values);
       localStorage.setItem('access_token', data.accessToken);
       localStorage.setItem('refresh_token', data.refreshToken);
       router.replace(returnUrl);
-    } catch {
-      toast.error('E-mail ou senha incorretos.');
+    } catch (err: unknown) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : 'E-mail ou senha incorretos. Tente novamente.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -91,8 +96,16 @@ function EntrarForm() {
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-[#C9A84C]/60 to-transparent" />
-
+        {motivo && (
+          <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              {motivo === 'sessao-expirada'
+                ? 'Sua sessão expirou. Faça login novamente para continuar.'
+                : 'Faça login para acessar essa área.'}
+            </span>
+          </div>
+        )}
         <div className="rounded-b-2xl border border-t-0 border-[#C9A84C]/20 bg-white/[0.04] px-8 py-10 shadow-2xl shadow-black/60 backdrop-blur-xl">
           {/* Logo */}
           <div className="mb-10 flex flex-col items-center gap-3">

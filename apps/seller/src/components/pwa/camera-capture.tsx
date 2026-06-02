@@ -182,7 +182,7 @@ export function CameraCapture({ label, hint, onCapture, disabled, step }: Camera
           <Upload className="h-5 w-5" /> Galeria
         </button>
       </div>
-      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileInput} disabled={disabled} />
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileInput} disabled={disabled} />
     </div>
   );
 }

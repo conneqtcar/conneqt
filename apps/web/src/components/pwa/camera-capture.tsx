@@ -263,7 +263,6 @@ export function CameraCapture({ label, hint, onCapture, disabled, step }: Camera
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleFileInput}
         disabled={disabled}

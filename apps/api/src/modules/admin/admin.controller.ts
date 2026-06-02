@@ -1,6 +1,6 @@
 import {
   Controller, Get, Patch, Post, Body, Param, UseGuards, Query,
-  UseInterceptors, UploadedFile, BadRequestException,
+  UseInterceptors, UploadedFile, BadRequestException, Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -64,15 +64,18 @@ export class AdminController {
 
   @Post('listings')
   @ApiOperation({ summary: 'Criar anúncio manualmente (admin)' })
-  createListing(@Body() body: {
-    brand: string; model: string; year: number; color: string; mileage: number;
-    fuelType: string; transmission: string; bodyType?: string; doors?: number;
-    plate?: string; chassis?: string; renavam?: string;
-    price: number; description?: string;
-    acceptsFinancing: boolean; acceptsTrade: boolean;
-    sellerEmail?: string; photoUrls?: string[];
-  }) {
-    return this.adminService.createListing(body);
+  createListing(
+    @Request() req: { user: { sub: string } },
+    @Body() body: {
+      brand: string; model: string; year: number; color: string; mileage: number;
+      fuelType: string; transmission: string; bodyType?: string; doors?: number;
+      plate?: string; chassis?: string; renavam?: string;
+      price: number; description?: string;
+      acceptsFinancing: boolean; acceptsTrade: boolean;
+      sellerEmail?: string; photoUrls?: string[];
+    },
+  ) {
+    return this.adminService.createListing(body, req.user.sub);
   }
 
   @Patch('listings/:id/deactivate')
