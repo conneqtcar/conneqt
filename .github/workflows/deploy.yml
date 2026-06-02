@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
 
+env:
+  VERCEL_ORG_ID: uOnAs2UKqy7k0HR9liIAypEJ
+
 jobs:
   deploy-admin:
     name: Deploy Admin
@@ -11,19 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Admin
         run: |
-          echo '{"orgId":"uOnAs2UKqy7k0HR9liIAypEJ","projectId":"prj_GB0rSjvNcPtvOhBXDaOLaOCSyEVO"}' > .vercel/project.json
+          mkdir -p .vercel
+          echo '{"orgId":"${{ env.VERCEL_ORG_ID }}","projectId":"prj_GB0rSjvNcPtvOhBXDaOLaOCSyEVO"}' > .vercel/project.json
           vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
-        working-directory: .
 
   deploy-seller:
     name: Deploy Seller
@@ -31,19 +32,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Seller
         run: |
-          echo '{"orgId":"uOnAs2UKqy7k0HR9liIAypEJ","projectId":"prj_CcJoWnSQc80Y624vfF8VLu8l4lOt"}' > .vercel/project.json
+          mkdir -p .vercel
+          echo '{"orgId":"${{ env.VERCEL_ORG_ID }}","projectId":"prj_CcJoWnSQc80Y624vfF8VLu8l4lOt"}' > .vercel/project.json
           vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
-        working-directory: .
 
   deploy-web:
     name: Deploy Web
@@ -51,16 +50,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Web
         run: |
-          echo '{"orgId":"uOnAs2UKqy7k0HR9liIAypEJ","projectId":"prj_WGNtDrXA8CnUvm4RAggzabM9X8pa"}' > .vercel/project.json
+          mkdir -p .vercel
+          echo '{"orgId":"${{ env.VERCEL_ORG_ID }}","projectId":"prj_WGNtDrXA8CnUvm4RAggzabM9X8pa"}' > .vercel/project.json
           vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
-        working-directory: .
