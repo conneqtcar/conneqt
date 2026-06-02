@@ -130,6 +130,18 @@ export class AdminService {
     });
   }
 
+  async promoteToAdmin(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Usuário não encontrado.');
+    if (user.type === 'ADMIN') throw new ConflictException('Usuário já é administrador.');
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { type: 'ADMIN' },
+      select: { id: true, name: true, email: true, type: true },
+    });
+  }
+
   async deactivateListing(listingId: string) {
     return this.prisma.listing.update({
       where: { id: listingId },

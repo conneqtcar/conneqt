@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, ShieldCheck, ShieldX, Ban } from 'lucide-react';
+import { Loader2, ShieldCheck, ShieldX, Ban, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 
@@ -59,6 +59,16 @@ export default function UsuariosPage() {
     },
   });
 
+  const promoteToAdmin = useMutation({
+    mutationFn: (id: string) => api.patch(`/admin/users/${id}/promote-admin`),
+    onSuccess: (_, id) => {
+      const user = data.find((u) => u.id === id);
+      toast.success(`${user?.name ?? 'Usuário'} promovido a Administrador.`);
+      qc.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: () => toast.error('Erro ao promover usuário.'),
+  });
+
   const filtered = data.filter(
     (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -103,7 +113,15 @@ export default function UsuariosPage() {
                     <div className="font-medium text-gray-900">{user.name}</div>
                     <div className="text-sm text-gray-500">{user.email}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm">{user.type}</td>
+                  <td className="px-6 py-4 text-sm">
+                    {user.type === 'ADMIN' ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-brand-gold/10 px-2.5 py-0.5 text-xs font-semibold text-brand-gold">
+                        <Crown className="h-3 w-3" /> Admin
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">{user.type}</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -140,6 +158,20 @@ export default function UsuariosPage() {
                             <ShieldX className="h-4 w-4" />
                           </button>
                         </>
+                      )}
+                      {user.type !== 'ADMIN' && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Promover "${user.name}" a Administrador?\n\nEsta ação dará acesso total ao painel admin.`)) {
+                              promoteToAdmin.mutate(user.id);
+                            }
+                          }}
+                          disabled={promoteToAdmin.isPending}
+                          className="rounded p-1 text-brand-gold hover:bg-brand-gold/10 disabled:opacity-50"
+                          title="Promover a Administrador"
+                        >
+                          <Crown className="h-4 w-4" />
+                        </button>
                       )}
                       {user.status === 'ACTIVE' && user.type !== 'ADMIN' && (
                         <button

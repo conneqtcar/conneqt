@@ -48,6 +48,12 @@ export class AdminController {
     return this.adminService.rejectKyc(id, body.reason);
   }
 
+  @Patch('users/:id/promote-admin')
+  @ApiOperation({ summary: 'Promover usuário a administrador' })
+  promoteToAdmin(@Param('id') id: string) {
+    return this.adminService.promoteToAdmin(id);
+  }
+
   @Post('dealers')
   @ApiOperation({ summary: 'Cadastrar lojista manualmente (admin)' })
   createDealer(@Body() body: {
