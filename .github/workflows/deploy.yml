@@ -14,7 +14,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Admin
@@ -32,7 +31,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Seller
@@ -50,7 +48,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Web
