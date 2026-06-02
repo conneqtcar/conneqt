@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
 
-env:
-  VERCEL_ORG_ID: uOnAs2UKqy7k0HR9liIAypEJ
-
 jobs:
   deploy-admin:
     name: Deploy Admin
@@ -21,10 +18,10 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Admin
-        run: |
-          mkdir -p .vercel
-          echo '{"orgId":"${{ env.VERCEL_ORG_ID }}","projectId":"prj_GB0rSjvNcPtvOhBXDaOLaOCSyEVO"}' > .vercel/project.json
-          vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: uOnAs2UKqy7k0HR9liIAypEJ
+          VERCEL_PROJECT_ID: prj_GB0rSjvNcPtvOhBXDaOLaOCSyEVO
+        run: vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
 
   deploy-seller:
     name: Deploy Seller
@@ -39,10 +36,10 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Seller
-        run: |
-          mkdir -p .vercel
-          echo '{"orgId":"${{ env.VERCEL_ORG_ID }}","projectId":"prj_CcJoWnSQc80Y624vfF8VLu8l4lOt"}' > .vercel/project.json
-          vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: uOnAs2UKqy7k0HR9liIAypEJ
+          VERCEL_PROJECT_ID: prj_CcJoWnSQc80Y624vfF8VLu8l4lOt
+        run: vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
 
   deploy-web:
     name: Deploy Web
@@ -57,7 +54,7 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
       - name: Deploy Web
-        run: |
-          mkdir -p .vercel
-          echo '{"orgId":"${{ env.VERCEL_ORG_ID }}","projectId":"prj_WGNtDrXA8CnUvm4RAggzabM9X8pa"}' > .vercel/project.json
-          vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: uOnAs2UKqy7k0HR9liIAypEJ
+          VERCEL_PROJECT_ID: prj_WGNtDrXA8CnUvm4RAggzabM9X8pa
+        run: vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
