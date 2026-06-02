@@ -605,6 +605,8 @@ export default function AnunciosPage() {
           </table>
         )}
       </div>
+
+      {showModal && <CriarAnuncioModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }
