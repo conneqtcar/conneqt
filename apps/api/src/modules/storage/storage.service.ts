@@ -8,9 +8,12 @@ export class StorageService {
   private readonly bucket: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.supabaseUrl = configService.get<string>('SUPABASE_URL', '');
+    // Aceita tanto SUPABASE_URL quanto NEXT_PUBLIC_SUPABASE_URL para compatibilidade
+    this.supabaseUrl =
+      configService.get<string>('SUPABASE_URL') ||
+      configService.get<string>('NEXT_PUBLIC_SUPABASE_URL', '');
     this.serviceKey = configService.get<string>('SUPABASE_SERVICE_ROLE_KEY', '');
-    this.bucket = configService.get<string>('SUPABASE_STORAGE_BUCKET', 'banners');
+    this.bucket = configService.get<string>('SUPABASE_STORAGE_BUCKET', 'inspection-media');
   }
 
   /** Upload de um buffer diretamente para o Supabase Storage (bucket publico). */
