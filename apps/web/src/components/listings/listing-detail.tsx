@@ -39,13 +39,10 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const [saved, setSaved] = useState(false);
   const router = useRouter();
 
-  const images = (listing.images as string[] | undefined) ?? [
-    `https://picsum.photos/seed/${listing.id as string}-ph1/1600/900`,
-    `https://picsum.photos/seed/${listing.id as string}-ph2/1600/900`,
-    `https://picsum.photos/seed/${listing.id as string}-ph3/1600/900`,
-    `https://picsum.photos/seed/${listing.id as string}-ph4/1600/900`,
-    `https://picsum.photos/seed/${listing.id as string}-ph5/1600/900`,
-  ];
+  const inspectionMedia = (inspection?.media as Array<{ url: string; type: string }> | undefined) ?? [];
+  const images = inspectionMedia.length > 0
+    ? inspectionMedia.map((m) => m.url)
+    : [`https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=80`];
 
   useEffect(() => {
     const onScroll = () => setNavSolid(window.scrollY > 40);

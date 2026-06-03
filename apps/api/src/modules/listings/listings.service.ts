@@ -94,7 +94,16 @@ export class ListingsService {
             include: {
               inspections: {
                 where: { status: 'APPROVED' },
-                select: { id: true, score: true },
+                select: {
+                  id: true,
+                  score: true,
+                  media: {
+                    where: { type: 'PHOTO' },
+                    select: { url: true, type: true },
+                    take: 1,
+                    orderBy: { createdAt: 'asc' as const },
+                  },
+                },
                 take: 1,
               },
             },
