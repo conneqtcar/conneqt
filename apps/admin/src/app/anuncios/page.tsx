@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Loader2, Plus, X, Car, XCircle, Upload, Play, Star, ChevronRight, Pencil, Trash2,
@@ -512,21 +512,23 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
 // ─── Edit Modal ────────────────────────────────────────────────────────────────
 interface PhotoItem { preview: string; isNew: boolean; isVideo: boolean; url?: string; file?: File }
 
-function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose: () => void }) {
+// Formulário interno — só monta quando listing já está disponível,
+// usa defaultValues para preencher sem precisar de reset()
+function EditForm({ listing, listingId, onClose }: {
+  listing: Record<string, unknown>;
+  listingId: string;
+  onClose: () => void;
+}) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [photos, setPhotos] = useState<PhotoItem[]>([]);
-  const [photosLoaded, setPhotosLoaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dados' | 'fotos'>('dados');
 
-  const { data: listing, isLoading } = useQuery({
-    queryKey: ['admin-listing', listingId],
-    queryFn: async () => {
-      const { data } = await api.get(`/admin/listings/${listingId}`);
-      return data;
-    },
-  });
+  const v = (listing.vehicle ?? {}) as Record<string, unknown>;
+  const existingMedia = ((v.inspections as Array<{ media: Array<{ url: string; type: string }> }> | undefined)?.[0]?.media ?? []);
+  const [photos, setPhotos] = useState<PhotoItem[]>(
+    () => existingMedia.map(m => ({ preview: m.url, url: m.url, isNew: false, isVideo: m.type === 'VIDEO' }))
+  );
 
   const fi = 'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20';
   const la = 'block text-sm font-medium text-gray-700';
@@ -551,34 +553,28 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
   });
   type EditData = z.infer<typeof editSchema>;
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EditData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<EditData>({
     resolver: zodResolver(editSchema),
+    defaultValues: {
+      brand:           String(v.brand ?? ''),
+      model:           String(v.model ?? ''),
+      year:            Number(v.year ?? new Date().getFullYear()),
+      color:           String(v.color ?? ''),
+      mileage:         Number(v.mileage ?? 0),
+      fuelType:        (v.fuelType as EditData['fuelType']) ?? 'FLEX',
+      transmission:    (v.transmission as EditData['transmission']) ?? 'MANUAL',
+      plate:           String(v.plate ?? ''),
+      chassis:         String(v.chassis ?? ''),
+      renavam:         String(v.renavam ?? ''),
+      price:           Number(listing.price ?? 0),
+      description:     String(listing.description ?? ''),
+      acceptsFinancing: Boolean(listing.acceptsFinancing),
+      acceptsTrade:    Boolean(listing.acceptsTrade),
+    },
   });
 
   const acceptsFinancing = watch('acceptsFinancing');
   const acceptsTrade = watch('acceptsTrade');
-
-  // Preenche form e carrega fotos quando os dados chegam
-  useEffect(() => {
-    if (!listing || photosLoaded) return;
-    const v = listing.vehicle;
-    reset({
-      brand: v?.brand ?? '', model: v?.model ?? '',
-      year: v?.year ?? new Date().getFullYear(),
-      color: v?.color ?? '', mileage: v?.mileage ?? 0,
-      fuelType: v?.fuelType ?? 'FLEX', transmission: v?.transmission ?? 'MANUAL',
-      plate: v?.plate ?? '', chassis: v?.chassis ?? '', renavam: v?.renavam ?? '',
-      price: listing.price ?? 0, description: listing.description ?? '',
-      acceptsFinancing: listing.acceptsFinancing ?? false,
-      acceptsTrade: listing.acceptsTrade ?? false,
-    });
-    const media: Array<{ url: string; type: string }> = v?.inspections?.[0]?.media ?? [];
-    setPhotos(media.map(m => ({
-      preview: m.url, url: m.url, isNew: false,
-      isVideo: m.type === 'VIDEO',
-    })));
-    setPhotosLoaded(true);
-  }, [listing, photosLoaded, reset]);
 
   const addFiles = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -642,26 +638,7 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold/10">
-              <Pencil className="h-4 w-4 text-brand-gold" />
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900">Editar anúncio</h2>
-              {listing && (
-                <p className="text-xs text-gray-400">
-                  {listing.vehicle?.brand} {listing.vehicle?.model} {listing.vehicle?.year}
-                </p>
-              )}
-            </div>
-          </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X className="h-5 w-5" /></button>
-        </div>
-
+    <>
         {/* Tabs */}
         <div className="flex border-b border-gray-100">
           {(['dados', 'fotos'] as const).map(tab => (
@@ -674,9 +651,6 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
 
         {/* Body */}
         <div className="max-h-[62vh] overflow-y-auto px-6 py-5">
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-gray-400" /></div>
-          ) : (
             <>
               {/* ── Tab: Dados ── */}
               {activeTab === 'dados' && (
@@ -832,7 +806,6 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
                 </div>
               )}
             </>
-          )}
         </div>
 
         {/* Footer */}
@@ -841,13 +814,56 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
           <button
             type="button"
             onClick={handleSubmit(d => mutation.mutate(d))}
-            disabled={mutation.isPending || isUploading || isLoading}
+            disabled={mutation.isPending || isUploading}
             className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark disabled:opacity-70"
           >
             {(mutation.isPending || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
             {isUploading ? 'Enviando fotos...' : 'Salvar alterações'}
           </button>
         </div>
+    </>
+  );
+}
+
+// Wrapper — busca dados e renderiza EditForm apenas quando estiver pronto
+function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose: () => void }) {
+  const { data: listing, isLoading, isError } = useQuery({
+    queryKey: ['admin-listing', listingId],
+    queryFn: async () => {
+      const { data } = await api.get(`/admin/listings/${listingId}`);
+      return data as Record<string, unknown>;
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8 backdrop-blur-sm">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold/10">
+              <Pencil className="h-4 w-4 text-brand-gold" />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900">Editar anúncio</h2>
+              {listing && (() => { const v = listing.vehicle as Record<string, unknown>; return <p className="text-xs text-gray-400">{String(v?.brand ?? '')} {String(v?.model ?? '')} {String(v?.year ?? '')}</p>; })()}
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+        </div>
+
+        {isLoading && (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
+          </div>
+        )}
+        {isError && (
+          <div className="px-6 py-10 text-center text-sm text-red-600">
+            Erro ao carregar anúncio. Feche e tente novamente.
+          </div>
+        )}
+        {!isLoading && !isError && listing && (
+          <EditForm listing={listing} listingId={listingId} onClose={onClose} />
+        )}
       </div>
     </div>
   );
