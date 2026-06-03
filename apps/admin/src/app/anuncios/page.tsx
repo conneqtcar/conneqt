@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Loader2, Plus, X, Car, XCircle, Upload, Play, Star, ChevronRight, Pencil, Trash2,
@@ -510,13 +510,13 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Edit Modal ────────────────────────────────────────────────────────────────
-interface ExistingMedia { url: string; type: string }
+interface PhotoItem { preview: string; isNew: boolean; isVideo: boolean; url?: string; file?: File }
 
 function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose: () => void }) {
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [newMedia, setNewMedia] = useState<MediaFile[]>([]);
-  const [keptUrls, setKeptUrls] = useState<string[] | null>(null); // null = not loaded yet
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
+  const [photosLoaded, setPhotosLoaded] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState<'dados' | 'fotos'>('dados');
 
@@ -558,60 +558,77 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
   const acceptsFinancing = watch('acceptsFinancing');
   const acceptsTrade = watch('acceptsTrade');
 
-  // Preenche o form quando os dados chegam
-  const [formReady, setFormReady] = useState(false);
-  if (listing && !formReady) {
+  // Preenche form e carrega fotos quando os dados chegam
+  useEffect(() => {
+    if (!listing || photosLoaded) return;
     const v = listing.vehicle;
-    const insp = v?.inspections?.[0];
     reset({
-      brand: v?.brand ?? '', model: v?.model ?? '', year: v?.year ?? new Date().getFullYear(),
+      brand: v?.brand ?? '', model: v?.model ?? '',
+      year: v?.year ?? new Date().getFullYear(),
       color: v?.color ?? '', mileage: v?.mileage ?? 0,
       fuelType: v?.fuelType ?? 'FLEX', transmission: v?.transmission ?? 'MANUAL',
       plate: v?.plate ?? '', chassis: v?.chassis ?? '', renavam: v?.renavam ?? '',
       price: listing.price ?? 0, description: listing.description ?? '',
-      acceptsFinancing: listing.acceptsFinancing ?? false, acceptsTrade: listing.acceptsTrade ?? false,
+      acceptsFinancing: listing.acceptsFinancing ?? false,
+      acceptsTrade: listing.acceptsTrade ?? false,
     });
-    const existingUrls = (insp?.media ?? []).map((m: ExistingMedia) => m.url);
-    setKeptUrls(existingUrls);
-    setFormReady(true);
-  }
+    const media: Array<{ url: string; type: string }> = v?.inspections?.[0]?.media ?? [];
+    setPhotos(media.map(m => ({
+      preview: m.url, url: m.url, isNew: false,
+      isVideo: m.type === 'VIDEO',
+    })));
+    setPhotosLoaded(true);
+  }, [listing, photosLoaded, reset]);
 
   const addFiles = useCallback((files: FileList | null) => {
     if (!files) return;
     const allowed = Array.from(files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
-    const total = (keptUrls?.length ?? 0) + newMedia.length;
-    const toAdd = allowed.slice(0, 20 - total).map(file => ({
-      file, preview: URL.createObjectURL(file), isVideo: file.type.startsWith('video/'),
+    const toAdd = allowed.slice(0, 20 - photos.length).map(file => ({
+      file, preview: URL.createObjectURL(file), isNew: true, isVideo: file.type.startsWith('video/'),
     }));
-    setNewMedia(prev => [...prev, ...toAdd]);
-  }, [keptUrls, newMedia.length]);
+    setPhotos(prev => [...prev, ...toAdd]);
+  }, [photos.length]);
 
-  const removeExisting = (url: string) => setKeptUrls(prev => (prev ?? []).filter(u => u !== url));
-  const removeNew = (idx: number) => {
-    setNewMedia(prev => { URL.revokeObjectURL(prev[idx].preview); return prev.filter((_, i) => i !== idx); });
+  const removePhoto = (idx: number) => {
+    setPhotos(prev => {
+      if (prev[idx].isNew) URL.revokeObjectURL(prev[idx].preview);
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const setAsCover = (idx: number) => {
+    setPhotos(prev => [prev[idx], ...prev.filter((_, i) => i !== idx)]);
   };
 
   const mutation = useMutation({
     mutationFn: async (data: EditData) => {
-      let finalUrls: string[] | undefined;
-      const existing = keptUrls ?? [];
-      if (newMedia.length > 0) {
+      // Upload new photos and resolve final ordered URL list
+      const originalUrls = (listing?.vehicle?.inspections?.[0]?.media ?? []).map((m: { url: string }) => m.url);
+      const hasChanges = photos.some(p => p.isNew) ||
+        photos.length !== originalUrls.length ||
+        photos.some((p, i) => p.url !== originalUrls[i]);
+
+      let photoUrls: string[] | undefined;
+      if (hasChanges) {
         setIsUploading(true);
         try {
-          const uploaded = await Promise.all(newMedia.map(async m => {
+          const resolved = await Promise.all(photos.map(async p => {
+            if (!p.isNew) return p.url!;
             const form = new FormData();
-            form.append('file', m.file);
-            const { data: res } = await api.post('/admin/upload-photo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+            form.append('file', p.file!);
+            const { data: res } = await api.post('/admin/upload-photo', form, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
             return res.url as string;
           }));
-          finalUrls = [...existing, ...uploaded];
+          photoUrls = resolved;
         } finally { setIsUploading(false); }
-      } else if (keptUrls !== null) {
-        // Fotos foram modificadas (alguma removida)
-        const originalCount = listing?.vehicle?.inspections?.[0]?.media?.length ?? 0;
-        if (keptUrls.length !== originalCount) finalUrls = existing;
       }
-      return api.patch(`/admin/listings/${listingId}`, { ...data, ...(finalUrls !== undefined && { photoUrls: finalUrls }) });
+
+      return api.patch(`/admin/listings/${listingId}`, {
+        ...data,
+        ...(photoUrls !== undefined && { photoUrls }),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
@@ -650,7 +667,7 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
           {(['dados', 'fotos'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? 'border-b-2 border-brand-gold text-brand-gold' : 'text-gray-500 hover:text-gray-700'}`}>
-              {tab === 'dados' ? 'Dados do anúncio' : `Fotos ${keptUrls !== null ? `(${keptUrls.length + newMedia.length})` : ''}`}
+              {tab === 'dados' ? 'Dados do anúncio' : `Fotos (${photos.length})`}
             </button>
           ))}
         </div>
@@ -707,10 +724,10 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
                     <textarea {...register('description')} rows={3} className={`${fi} resize-none`} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    {[
+                    {([
                       { field: 'acceptsFinancing' as const, val: acceptsFinancing, label: 'Aceita financiamento' },
                       { field: 'acceptsTrade' as const, val: acceptsTrade, label: 'Aceita troca' },
-                    ].map(({ field, val, label }) => (
+                    ]).map(({ field, val, label }) => (
                       <button key={field} type="button" onClick={() => setValue(field, !val)}
                         className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-colors ${val ? 'border-brand-gold bg-brand-gold/5' : 'border-gray-200 hover:border-gray-300'}`}>
                         <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 ${val ? 'border-brand-gold bg-brand-gold' : 'border-gray-300'}`}>
@@ -726,63 +743,92 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
               {/* ── Tab: Fotos ── */}
               {activeTab === 'fotos' && (
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-500">Gerencie as fotos do anúncio. Arraste novas ou remova as existentes.</p>
+                  <p className="text-sm text-gray-500">
+                    A <strong>primeira foto</strong> é a capa exibida nos cards e na busca.
+                    Clique em <strong>"Definir capa"</strong> para mover qualquer foto para a primeira posição.
+                  </p>
 
-                  {/* Fotos existentes */}
-                  {(keptUrls ?? []).length > 0 && (
-                    <div>
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Fotos atuais</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {(keptUrls ?? []).map((url, i) => (
-                          <div key={url} className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={url} alt="" className="h-full w-full object-cover" />
-                            {i === 0 && <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-brand-gold/90 px-1.5 py-0.5 text-xs font-medium text-white"><Star className="h-3 w-3" /> Capa</span>}
-                            <button type="button" onClick={() => removeExisting(url)}
-                              className="absolute right-1 top-1 hidden rounded-full bg-red-500/80 p-0.5 text-white hover:bg-red-600 group-hover:flex">
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Novas fotos */}
-                  <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Adicionar novas</p>
-                    <div
-                      onClick={() => inputRef.current?.click()}
-                      className="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 p-8 text-center hover:border-brand-gold hover:bg-gray-50 transition-colors"
-                    >
-                      <Upload className="mx-auto h-6 w-6 text-gray-400" />
-                      <p className="mt-2 text-sm text-gray-500">Clique para adicionar fotos</p>
-                      <input ref={inputRef} type="file" multiple accept="image/*,video/*" className="hidden" onChange={e => addFiles(e.target.files)} />
-                    </div>
-                    {newMedia.length > 0 && (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
-                        {newMedia.map((m, i) => (
-                          <div key={i} className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
-                            {m.isVideo ? (
-                              <div className="flex h-full items-center justify-center bg-gray-800"><Play className="h-6 w-6 text-white" /></div>
+                  {/* Grid unificado de fotos */}
+                  {photos.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-3">
+                      {photos.map((p, i) => (
+                        <div key={p.preview} className="group relative overflow-hidden rounded-xl bg-gray-100">
+                          {/* Imagem */}
+                          <div className="aspect-[4/3] overflow-hidden">
+                            {p.isVideo ? (
+                              <div className="flex h-full items-center justify-center bg-gray-800"><Play className="h-8 w-8 text-white" /></div>
                             ) : (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={m.preview} alt="" className="h-full w-full object-cover" />
+                              <img src={p.preview} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             )}
-                            <span className="absolute left-1 bottom-1 rounded bg-green-500/80 px-1 py-0.5 text-[10px] text-white">Nova</span>
-                            <button type="button" onClick={() => removeNew(i)}
-                              className="absolute right-1 top-1 hidden rounded-full bg-red-500/80 p-0.5 text-white hover:bg-red-600 group-hover:flex">
-                              <Trash2 className="h-3 w-3" />
-                            </button>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
 
-                  {(keptUrls ?? []).length === 0 && newMedia.length === 0 && (
-                    <p className="text-center text-xs text-gray-400">Nenhuma foto — o anúncio ficará sem imagens.</p>
+                          {/* Badge capa */}
+                          {i === 0 ? (
+                            <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-brand-gold px-2 py-0.5 text-xs font-bold text-white shadow">
+                              <Star className="h-3 w-3 fill-white" /> Capa
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setAsCover(i)}
+                              className="absolute left-2 top-2 hidden items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm transition hover:bg-brand-gold group-hover:flex"
+                            >
+                              <Star className="h-3 w-3" /> Definir capa
+                            </button>
+                          )}
+
+                          {/* Badge nova */}
+                          {p.isNew && (
+                            <span className="absolute bottom-2 left-2 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-semibold text-white">Nova</span>
+                          )}
+
+                          {/* Remover */}
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(i)}
+                            className="absolute right-2 top-2 hidden rounded-full bg-red-500 p-1 text-white shadow transition hover:bg-red-600 group-hover:flex"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+
+                          {/* Número */}
+                          <div className="absolute bottom-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-[10px] font-bold text-white">
+                            {i + 1}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Botão adicionar */}
+                      {photos.length < 20 && (
+                        <button
+                          type="button"
+                          onClick={() => inputRef.current?.click()}
+                          className="flex aspect-[4/3] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 transition-colors hover:border-brand-gold hover:bg-gray-50"
+                        >
+                          <Plus className="h-6 w-6 text-gray-400" />
+                          <span className="mt-1 text-xs text-gray-400">Adicionar</span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => inputRef.current?.click()}
+                      className="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 p-10 text-center hover:border-brand-gold hover:bg-gray-50 transition-colors"
+                    >
+                      <Upload className="mx-auto h-7 w-7 text-gray-400" />
+                      <p className="mt-2 text-sm font-medium text-gray-700">Nenhuma foto — clique para adicionar</p>
+                    </div>
                   )}
+
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={e => { addFiles(e.target.files); if (inputRef.current) inputRef.current.value = ''; }}
+                  />
                 </div>
               )}
             </>
@@ -792,9 +838,12 @@ function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
           <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancelar</button>
-          <button type="button" onClick={handleSubmit(d => mutation.mutate(d))}
+          <button
+            type="button"
+            onClick={handleSubmit(d => mutation.mutate(d))}
             disabled={mutation.isPending || isUploading || isLoading}
-            className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark disabled:opacity-70">
+            className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark disabled:opacity-70"
+          >
             {(mutation.isPending || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
             {isUploading ? 'Enviando fotos...' : 'Salvar alterações'}
           </button>
