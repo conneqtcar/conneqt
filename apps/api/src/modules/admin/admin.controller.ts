@@ -84,6 +84,25 @@ export class AdminController {
     return this.adminService.createListing(body, req.user.sub);
   }
 
+  @Get('listings/:id')
+  @ApiOperation({ summary: 'Buscar anúncio por ID (admin)' })
+  getListing(@Param('id') id: string) {
+    return this.adminService.getListing(id);
+  }
+
+  @Patch('listings/:id')
+  @ApiOperation({ summary: 'Editar anúncio (admin)' })
+  updateListing(@Param('id') id: string, @Body() body: {
+    brand?: string; model?: string; year?: number; color?: string; mileage?: number;
+    fuelType?: string; transmission?: string; bodyType?: string; doors?: number;
+    plate?: string; chassis?: string; renavam?: string;
+    price?: number; description?: string;
+    acceptsFinancing?: boolean; acceptsTrade?: boolean;
+    photoUrls?: string[];
+  }) {
+    return this.adminService.updateListing(id, body);
+  }
+
   @Patch('listings/:id/deactivate')
   @ApiOperation({ summary: 'Desativar anúncio (admin)' })
   deactivateListing(@Param('id') id: string) {

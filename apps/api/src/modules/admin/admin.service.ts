@@ -142,6 +142,108 @@ export class AdminService {
     });
   }
 
+  async getListing(listingId: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: {
+        vehicle: {
+          include: {
+            inspections: {
+              where: { status: 'APPROVED' },
+              include: { media: { where: { type: 'PHOTO' }, orderBy: { createdAt: 'asc' } } },
+              take: 1,
+            },
+          },
+        },
+        seller: { select: { id: true, name: true, email: true } },
+      },
+    });
+    if (!listing) throw new NotFoundException('Anúncio não encontrado.');
+    return listing;
+  }
+
+  async updateListing(
+    listingId: string,
+    dto: {
+      brand?: string; model?: string; year?: number; color?: string; mileage?: number;
+      fuelType?: string; transmission?: string; bodyType?: string; doors?: number;
+      plate?: string; chassis?: string; renavam?: string;
+      price?: number; description?: string;
+      acceptsFinancing?: boolean; acceptsTrade?: boolean;
+      photoUrls?: string[];
+    },
+  ) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: {
+        vehicle: {
+          include: {
+            inspections: { where: { status: 'APPROVED' }, take: 1 },
+          },
+        },
+      },
+    });
+    if (!listing) throw new NotFoundException('Anúncio não encontrado.');
+
+    const { brand, model, year, color, mileage, fuelType, transmission, bodyType, doors,
+            plate, chassis, renavam, price, description, acceptsFinancing, acceptsTrade, photoUrls } = dto;
+
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.vehicle.update({
+        where: { id: listing.vehicleId },
+        data: {
+          ...(brand !== undefined && { brand }),
+          ...(model !== undefined && { model }),
+          ...(year !== undefined && { year }),
+          ...(color !== undefined && { color }),
+          ...(mileage !== undefined && { mileage }),
+          ...(fuelType !== undefined && { fuelType: fuelType as any }),
+          ...(transmission !== undefined && { transmission: transmission as any }),
+          ...(plate !== undefined && { plate: plate || null }),
+          ...(chassis !== undefined && { chassis: chassis || null }),
+          ...(renavam !== undefined && { renavam: renavam || null }),
+        },
+      });
+
+      const extras: string[] = [];
+      if (bodyType) extras.push(bodyType);
+      if (doors) extras.push(`${doors} portas`);
+      const descriptionFinal = description !== undefined
+        ? [description, extras.join(' · ')].filter(Boolean).join('\n') || null
+        : undefined;
+
+      await tx.listing.update({
+        where: { id: listingId },
+        data: {
+          ...(price !== undefined && { price }),
+          ...(descriptionFinal !== undefined && { description: descriptionFinal }),
+          ...(acceptsFinancing !== undefined && { acceptsFinancing }),
+          ...(acceptsTrade !== undefined && { acceptsTrade }),
+        },
+      });
+
+      if (photoUrls !== undefined) {
+        const inspection = listing.vehicle.inspections[0];
+        if (inspection) {
+          await tx.inspectionMedia.deleteMany({ where: { inspectionId: inspection.id } });
+          if (photoUrls.length > 0) {
+            await tx.inspectionMedia.createMany({
+              data: photoUrls.map((url, i) => ({
+                inspectionId: inspection.id,
+                type: /\.(mp4|mov|avi|webm)$/i.test(url) ? 'VIDEO' : ('PHOTO' as any),
+                url,
+                key: `admin/${listing.vehicleId}/edit-${i}-${Date.now()}`,
+                hash: `edit-${listing.vehicleId}-${i}`,
+              })),
+            });
+          }
+        }
+      }
+    });
+
+    return this.getListing(listingId);
+  }
+
   async deactivateListing(listingId: string) {
     return this.prisma.listing.update({
       where: { id: listingId },

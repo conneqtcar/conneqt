@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Loader2, Plus, X, Car, XCircle, Upload, Play, Star, ChevronRight,
+  Loader2, Plus, X, Car, XCircle, Upload, Play, Star, ChevronRight, Pencil, Trash2,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -509,10 +509,306 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── Edit Modal ────────────────────────────────────────────────────────────────
+interface ExistingMedia { url: string; type: string }
+
+function EditarAnuncioModal({ listingId, onClose }: { listingId: string; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [newMedia, setNewMedia] = useState<MediaFile[]>([]);
+  const [keptUrls, setKeptUrls] = useState<string[] | null>(null); // null = not loaded yet
+  const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dados' | 'fotos'>('dados');
+
+  const { data: listing, isLoading } = useQuery({
+    queryKey: ['admin-listing', listingId],
+    queryFn: async () => {
+      const { data } = await api.get(`/admin/listings/${listingId}`);
+      return data;
+    },
+  });
+
+  const fi = 'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20';
+  const la = 'block text-sm font-medium text-gray-700';
+
+  const editSchema = z.object({
+    brand: z.string().min(1, 'Obrigatório'),
+    model: z.string().min(1, 'Obrigatório'),
+    year: z.coerce.number().int().min(1950).max(new Date().getFullYear() + 1),
+    color: z.string().min(1, 'Obrigatório'),
+    mileage: z.coerce.number().int().min(0),
+    fuelType: z.enum(['FLEX', 'GASOLINE', 'DIESEL', 'ELECTRIC', 'HYBRID']),
+    transmission: z.enum(['MANUAL', 'AUTOMATIC', 'CVT', 'SEMI_AUTO']),
+    bodyType: z.string().optional(),
+    doors: z.coerce.number().int().optional(),
+    plate: z.string().optional(),
+    chassis: z.string().optional(),
+    renavam: z.string().optional(),
+    price: z.coerce.number().min(1, 'Preço obrigatório'),
+    description: z.string().optional(),
+    acceptsFinancing: z.boolean().default(false),
+    acceptsTrade: z.boolean().default(false),
+  });
+  type EditData = z.infer<typeof editSchema>;
+
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<EditData>({
+    resolver: zodResolver(editSchema),
+  });
+
+  const acceptsFinancing = watch('acceptsFinancing');
+  const acceptsTrade = watch('acceptsTrade');
+
+  // Preenche o form quando os dados chegam
+  const [formReady, setFormReady] = useState(false);
+  if (listing && !formReady) {
+    const v = listing.vehicle;
+    const insp = v?.inspections?.[0];
+    reset({
+      brand: v?.brand ?? '', model: v?.model ?? '', year: v?.year ?? new Date().getFullYear(),
+      color: v?.color ?? '', mileage: v?.mileage ?? 0,
+      fuelType: v?.fuelType ?? 'FLEX', transmission: v?.transmission ?? 'MANUAL',
+      plate: v?.plate ?? '', chassis: v?.chassis ?? '', renavam: v?.renavam ?? '',
+      price: listing.price ?? 0, description: listing.description ?? '',
+      acceptsFinancing: listing.acceptsFinancing ?? false, acceptsTrade: listing.acceptsTrade ?? false,
+    });
+    const existingUrls = (insp?.media ?? []).map((m: ExistingMedia) => m.url);
+    setKeptUrls(existingUrls);
+    setFormReady(true);
+  }
+
+  const addFiles = useCallback((files: FileList | null) => {
+    if (!files) return;
+    const allowed = Array.from(files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    const total = (keptUrls?.length ?? 0) + newMedia.length;
+    const toAdd = allowed.slice(0, 20 - total).map(file => ({
+      file, preview: URL.createObjectURL(file), isVideo: file.type.startsWith('video/'),
+    }));
+    setNewMedia(prev => [...prev, ...toAdd]);
+  }, [keptUrls, newMedia.length]);
+
+  const removeExisting = (url: string) => setKeptUrls(prev => (prev ?? []).filter(u => u !== url));
+  const removeNew = (idx: number) => {
+    setNewMedia(prev => { URL.revokeObjectURL(prev[idx].preview); return prev.filter((_, i) => i !== idx); });
+  };
+
+  const mutation = useMutation({
+    mutationFn: async (data: EditData) => {
+      let finalUrls: string[] | undefined;
+      const existing = keptUrls ?? [];
+      if (newMedia.length > 0) {
+        setIsUploading(true);
+        try {
+          const uploaded = await Promise.all(newMedia.map(async m => {
+            const form = new FormData();
+            form.append('file', m.file);
+            const { data: res } = await api.post('/admin/upload-photo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+            return res.url as string;
+          }));
+          finalUrls = [...existing, ...uploaded];
+        } finally { setIsUploading(false); }
+      } else if (keptUrls !== null) {
+        // Fotos foram modificadas (alguma removida)
+        const originalCount = listing?.vehicle?.inspections?.[0]?.media?.length ?? 0;
+        if (keptUrls.length !== originalCount) finalUrls = existing;
+      }
+      return api.patch(`/admin/listings/${listingId}`, { ...data, ...(finalUrls !== undefined && { photoUrls: finalUrls }) });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
+      toast.success('Anúncio atualizado!');
+      onClose();
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Erro ao salvar.';
+      toast.error(msg);
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-8 backdrop-blur-sm">
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-gold/10">
+              <Pencil className="h-4 w-4 text-brand-gold" />
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-900">Editar anúncio</h2>
+              {listing && (
+                <p className="text-xs text-gray-400">
+                  {listing.vehicle?.brand} {listing.vehicle?.model} {listing.vehicle?.year}
+                </p>
+              )}
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100">
+          {(['dados', 'fotos'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === tab ? 'border-b-2 border-brand-gold text-brand-gold' : 'text-gray-500 hover:text-gray-700'}`}>
+              {tab === 'dados' ? 'Dados do anúncio' : `Fotos ${keptUrls !== null ? `(${keptUrls.length + newMedia.length})` : ''}`}
+            </button>
+          ))}
+        </div>
+
+        {/* Body */}
+        <div className="max-h-[62vh] overflow-y-auto px-6 py-5">
+          {isLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-gray-400" /></div>
+          ) : (
+            <>
+              {/* ── Tab: Dados ── */}
+              {activeTab === 'dados' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className={la}>Marca</label><input {...register('brand')} className={fi} />{errors.brand && <p className="mt-1 text-xs text-red-600">{errors.brand.message}</p>}</div>
+                    <div><label className={la}>Modelo</label><input {...register('model')} className={fi} />{errors.model && <p className="mt-1 text-xs text-red-600">{errors.model.message}</p>}</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div><label className={la}>Ano</label><input {...register('year')} type="number" className={fi} /></div>
+                    <div><label className={la}>Cor</label><input {...register('color')} className={fi} /></div>
+                    <div><label className={la}>Quilometragem</label><input {...register('mileage')} type="number" className={fi} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={la}>Combustível</label>
+                      <select {...register('fuelType')} className={fi}>
+                        <option value="FLEX">Flex</option><option value="GASOLINE">Gasolina</option>
+                        <option value="DIESEL">Diesel</option><option value="ELECTRIC">Elétrico</option><option value="HYBRID">Híbrido</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={la}>Câmbio</label>
+                      <select {...register('transmission')} className={fi}>
+                        <option value="MANUAL">Manual</option><option value="AUTOMATIC">Automático</option>
+                        <option value="CVT">CVT</option><option value="SEMI_AUTO">Semi-automático</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div><label className={la}>Placa</label><input {...register('plate')} className={`${fi} uppercase`} /></div>
+                    <div><label className={la}>Chassi</label><input {...register('chassis')} className={`${fi} font-mono uppercase`} /></div>
+                    <div><label className={la}>RENAVAM</label><input {...register('renavam')} className={`${fi} font-mono`} /></div>
+                  </div>
+                  <div className="border-t border-gray-100 pt-4">
+                    <div className="relative">
+                      <label className={la}>Preço de venda *</label>
+                      <span className="absolute left-3 top-[calc(50%+6px)] -translate-y-1/2 text-sm text-gray-400">R$</span>
+                      <input {...register('price')} type="number" min={1} className={`${fi} pl-9`} />
+                      {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price.message}</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <label className={la}>Descrição</label>
+                    <textarea {...register('description')} rows={3} className={`${fi} resize-none`} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { field: 'acceptsFinancing' as const, val: acceptsFinancing, label: 'Aceita financiamento' },
+                      { field: 'acceptsTrade' as const, val: acceptsTrade, label: 'Aceita troca' },
+                    ].map(({ field, val, label }) => (
+                      <button key={field} type="button" onClick={() => setValue(field, !val)}
+                        className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-colors ${val ? 'border-brand-gold bg-brand-gold/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 ${val ? 'border-brand-gold bg-brand-gold' : 'border-gray-300'}`}>
+                          {val && <span className="text-xs font-bold text-white">✓</span>}
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">{label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Tab: Fotos ── */}
+              {activeTab === 'fotos' && (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500">Gerencie as fotos do anúncio. Arraste novas ou remova as existentes.</p>
+
+                  {/* Fotos existentes */}
+                  {(keptUrls ?? []).length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Fotos atuais</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {(keptUrls ?? []).map((url, i) => (
+                          <div key={url} className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt="" className="h-full w-full object-cover" />
+                            {i === 0 && <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-brand-gold/90 px-1.5 py-0.5 text-xs font-medium text-white"><Star className="h-3 w-3" /> Capa</span>}
+                            <button type="button" onClick={() => removeExisting(url)}
+                              className="absolute right-1 top-1 hidden rounded-full bg-red-500/80 p-0.5 text-white hover:bg-red-600 group-hover:flex">
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Novas fotos */}
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Adicionar novas</p>
+                    <div
+                      onClick={() => inputRef.current?.click()}
+                      className="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 p-8 text-center hover:border-brand-gold hover:bg-gray-50 transition-colors"
+                    >
+                      <Upload className="mx-auto h-6 w-6 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-500">Clique para adicionar fotos</p>
+                      <input ref={inputRef} type="file" multiple accept="image/*,video/*" className="hidden" onChange={e => addFiles(e.target.files)} />
+                    </div>
+                    {newMedia.length > 0 && (
+                      <div className="mt-2 grid grid-cols-4 gap-2">
+                        {newMedia.map((m, i) => (
+                          <div key={i} className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
+                            {m.isVideo ? (
+                              <div className="flex h-full items-center justify-center bg-gray-800"><Play className="h-6 w-6 text-white" /></div>
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={m.preview} alt="" className="h-full w-full object-cover" />
+                            )}
+                            <span className="absolute left-1 bottom-1 rounded bg-green-500/80 px-1 py-0.5 text-[10px] text-white">Nova</span>
+                            <button type="button" onClick={() => removeNew(i)}
+                              className="absolute right-1 top-1 hidden rounded-full bg-red-500/80 p-0.5 text-white hover:bg-red-600 group-hover:flex">
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {(keptUrls ?? []).length === 0 && newMedia.length === 0 && (
+                    <p className="text-center text-xs text-gray-400">Nenhuma foto — o anúncio ficará sem imagens.</p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancelar</button>
+          <button type="button" onClick={handleSubmit(d => mutation.mutate(d))}
+            disabled={mutation.isPending || isUploading || isLoading}
+            className="flex items-center gap-2 rounded-lg bg-brand-gold px-5 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark disabled:opacity-70">
+            {(mutation.isPending || isUploading) && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isUploading ? 'Enviando fotos...' : 'Salvar alterações'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function AnunciosPage() {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data = [], isLoading } = useQuery<Listing[]>({
     queryKey: ['admin-listings'],
@@ -588,15 +884,23 @@ export default function AnunciosPage() {
                       {new Date(item.createdAt).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {item.status === 'ACTIVE' && (
+                      <div className="flex items-center justify-end gap-3">
                         <button
-                          onClick={() => deactivate.mutate(item.id)}
-                          disabled={deactivate.isPending}
-                          className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+                          onClick={() => setEditingId(item.id)}
+                          className="flex items-center gap-1 text-sm font-medium text-brand-gold hover:underline"
                         >
-                          Desativar
+                          <Pencil className="h-3.5 w-3.5" /> Editar
                         </button>
-                      )}
+                        {item.status === 'ACTIVE' && (
+                          <button
+                            onClick={() => deactivate.mutate(item.id)}
+                            disabled={deactivate.isPending}
+                            className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            Desativar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -607,6 +911,7 @@ export default function AnunciosPage() {
       </div>
 
       {showModal && <CriarAnuncioModal onClose={() => setShowModal(false)} />}
+      {editingId && <EditarAnuncioModal listingId={editingId} onClose={() => setEditingId(null)} />}
     </div>
   );
 }
