@@ -317,16 +317,10 @@ export function ListingDetail({ listing }: ListingDetailProps) {
               </div>
             </div>
 
-            {/* Placa e cor */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <p className="text-xs text-gray-400">Cor</p>
-                <p className="mt-1 font-bold text-gray-900">{vehicle?.color as string}</p>
-              </div>
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <p className="text-xs text-gray-400">Placa</p>
-                <p className="mt-1 font-mono font-bold text-gray-900">{vehicle?.plate as string}</p>
-              </div>
+            {/* Cor */}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-xs text-gray-400">Cor</p>
+              <p className="mt-1 font-bold text-gray-900">{vehicle?.color as string}</p>
             </div>
 
             {/* Descrição */}

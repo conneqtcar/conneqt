@@ -16,7 +16,13 @@ interface Listing {
   status: string;
   price: number;
   createdAt: string;
-  vehicle: { brand: string; model: string; year: number; plate: string };
+  vehicle: {
+    brand: string;
+    model: string;
+    year: number;
+    plate: string;
+    inspections?: Array<{ media: Array<{ url: string; type: string }> }>;
+  };
   seller: { name: string; email: string };
 }
 
@@ -320,7 +326,7 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
                     {...register('price')}
                     type="number"
                     min={1}
-                    step={100}
+                    step={1}
                     placeholder="89900"
                     className={`${fi} pl-9`}
                   />
@@ -689,7 +695,7 @@ function EditForm({ listing, listingId, onClose }: {
                     <div className="relative">
                       <label className={la}>Preço de venda *</label>
                       <span className="absolute left-3 top-[calc(50%+6px)] -translate-y-1/2 text-sm text-gray-400">R$</span>
-                      <input {...register('price')} type="number" min={1} className={`${fi} pl-9`} />
+                      <input {...register('price')} type="number" min={1} step={1} className={`${fi} pl-9`} />
                       {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price.message}</p>}
                     </div>
                   </div>
@@ -930,10 +936,25 @@ export default function AnunciosPage() {
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {item.vehicle.brand} {item.vehicle.model} {item.vehicle.year}
+                      <div className="flex items-center gap-3">
+                        {(() => {
+                          const firstPhoto = item.vehicle.inspections?.[0]?.media?.[0]?.url;
+                          return firstPhoto ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={firstPhoto} alt="" className="h-12 w-16 flex-shrink-0 rounded-lg object-cover" />
+                          ) : (
+                            <div className="flex h-12 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                              <Car className="h-5 w-5 text-gray-400" />
+                            </div>
+                          );
+                        })()}
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {item.vehicle.brand} {item.vehicle.model} {item.vehicle.year}
+                          </div>
+                          <div className="text-sm text-gray-500">{item.vehicle.plate}</div>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500">{item.vehicle.plate}</div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
                       <div>{item.seller.name}</div>
