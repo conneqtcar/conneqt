@@ -5,10 +5,71 @@ import { Shield, ShieldCheck, ArrowRight, Search, TrendingUp, Users, Star, Chevr
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-const FALLBACK_IMAGES = [
-  'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80',
-  'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1920&q=80',
-  'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1920&q=80',
+const BRAND_LOGOS = [
+  {
+    name: 'Volkswagen', viewBox: '0 0 100 100',
+    render: () => (<><circle cx={50} cy={50} r={46} fill="none" stroke="currentColor" strokeWidth={3.5}/><circle cx={50} cy={50} r={33} fill="none" stroke="currentColor" strokeWidth={2.5}/><path d="M37 26 L50 56 L63 26" fill="none" stroke="currentColor" strokeWidth={5.5} strokeLinejoin="round" strokeLinecap="round"/><path d="M24 41 L37 71 L50 51 L63 71 L76 41" fill="none" stroke="currentColor" strokeWidth={5.5} strokeLinejoin="round" strokeLinecap="round"/></>),
+  },
+  {
+    name: 'Audi', viewBox: '0 0 109 40',
+    render: () => (<><circle cx={20} cy={20} r={17} fill="none" stroke="currentColor" strokeWidth={3}/><circle cx={43} cy={20} r={17} fill="none" stroke="currentColor" strokeWidth={3}/><circle cx={66} cy={20} r={17} fill="none" stroke="currentColor" strokeWidth={3}/><circle cx={89} cy={20} r={17} fill="none" stroke="currentColor" strokeWidth={3}/></>),
+  },
+  {
+    name: 'BMW', viewBox: '0 0 100 100',
+    render: () => (<><circle cx={50} cy={50} r={46} fill="none" stroke="currentColor" strokeWidth={3.5}/><circle cx={50} cy={50} r={30} fill="none" stroke="currentColor" strokeWidth={3.5}/><line x1={50} y1={20} x2={50} y2={80} stroke="currentColor" strokeWidth={3.5}/><line x1={20} y1={50} x2={80} y2={50} stroke="currentColor" strokeWidth={3.5}/></>),
+  },
+  {
+    name: 'Mercedes-Benz', viewBox: '0 0 100 100',
+    render: () => (<><circle cx={50} cy={50} r={46} fill="none" stroke="currentColor" strokeWidth={3.5}/><path d="M50 8 L50 50 M50 50 L87.7 71 M50 50 L12.3 71" stroke="currentColor" strokeWidth={4.5} strokeLinecap="round"/><circle cx={50} cy={50} r={3.5} fill="currentColor"/></>),
+  },
+  {
+    name: 'Toyota', viewBox: '0 0 100 100',
+    render: () => (<><ellipse cx={50} cy={50} rx={46} ry={33} fill="none" stroke="currentColor" strokeWidth={4}/><ellipse cx={50} cy={50} rx={17} ry={46} fill="none" stroke="currentColor" strokeWidth={4}/><ellipse cx={50} cy={30} rx={32} ry={18} fill="none" stroke="currentColor" strokeWidth={3.5}/></>),
+  },
+  {
+    name: 'Honda', viewBox: '0 0 80 80',
+    render: () => (<path d="M12 12 L12 68 M68 12 L68 68 M12 40 L68 40" fill="none" stroke="currentColor" strokeWidth={8} strokeLinecap="round"/>),
+  },
+  {
+    name: 'Hyundai', viewBox: '0 0 100 80',
+    render: () => (<><ellipse cx={50} cy={40} rx={48} ry={37} fill="none" stroke="currentColor" strokeWidth={3.5}/><path d="M20 18 L20 62 M80 18 L80 62 M20 40 C32 28 68 52 80 40" fill="none" stroke="currentColor" strokeWidth={6} strokeLinecap="round"/></>),
+  },
+  {
+    name: 'Chevrolet', viewBox: '0 0 160 60',
+    render: () => (<><path d="M5 12 L78 12 L90 30 L78 48 L5 48 Z" fill="none" stroke="currentColor" strokeWidth={4}/><path d="M90 30 L82 12 L155 12 L155 48 L82 48 Z" fill="none" stroke="currentColor" strokeWidth={4}/></>),
+  },
+  {
+    name: 'Renault', viewBox: '0 0 70 90',
+    render: () => (<><path d="M35 4 L66 32 L35 60 L4 32 Z" fill="none" stroke="currentColor" strokeWidth={4}/><path d="M35 30 L66 58 L35 86 L4 58 Z" fill="none" stroke="currentColor" strokeWidth={4}/></>),
+  },
+  {
+    name: 'Nissan', viewBox: '0 0 120 60',
+    render: () => (<><circle cx={60} cy={30} r={27} fill="none" stroke="currentColor" strokeWidth={3.5}/><rect x={3} y={24} width={114} height={12} rx={6} fill="none" stroke="currentColor" strokeWidth={3.5}/></>),
+  },
+  {
+    name: 'Mitsubishi', viewBox: '0 0 90 64',
+    render: () => (<><path d="M45 1 L60 14 L45 27 L30 14 Z" fill="none" stroke="currentColor" strokeWidth={3.5}/><path d="M20 37 L35 50 L20 63 L5 50 Z" fill="none" stroke="currentColor" strokeWidth={3.5}/><path d="M70 37 L85 50 L70 63 L55 50 Z" fill="none" stroke="currentColor" strokeWidth={3.5}/></>),
+  },
+  {
+    name: 'Jeep', viewBox: '0 0 112 55',
+    render: () => (<><rect x={2} y={2} width={108} height={51} rx={8} fill="none" stroke="currentColor" strokeWidth={3}/><rect x={12} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/><rect x={25} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/><rect x={38} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/><rect x={51} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/><rect x={64} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/><rect x={77} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/><rect x={90} y={9} width={10} height={37} rx={5} fill="none" stroke="currentColor" strokeWidth={2.5}/></>),
+  },
+  {
+    name: 'Fiat', viewBox: '0 0 80 96',
+    render: () => (<><path d="M40 4 L76 20 L76 68 C76 83 60 93 40 97 C20 93 4 83 4 68 L4 20 Z" fill="none" stroke="currentColor" strokeWidth={4}/><line x1={14} y1={44} x2={66} y2={44} stroke="currentColor" strokeWidth={4} strokeLinecap="round"/><line x1={14} y1={58} x2={66} y2={58} stroke="currentColor" strokeWidth={4} strokeLinecap="round"/><line x1={14} y1={72} x2={66} y2={72} stroke="currentColor" strokeWidth={4} strokeLinecap="round"/></>),
+  },
+  {
+    name: 'Ford', viewBox: '0 0 140 70',
+    render: () => (<><ellipse cx={70} cy={35} rx={66} ry={31} fill="none" stroke="currentColor" strokeWidth={4}/><ellipse cx={70} cy={35} rx={50} ry={22} fill="none" stroke="currentColor" strokeWidth={2.5}/></>),
+  },
+  {
+    name: 'Kia', viewBox: '0 0 100 60',
+    render: () => (<><ellipse cx={50} cy={30} rx={47} ry={27} fill="none" stroke="currentColor" strokeWidth={3.5}/><path d="M18 20 L18 40 M18 30 L28 20 M18 30 L28 40" fill="none" stroke="currentColor" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round"/><line x1={45} y1={20} x2={45} y2={40} stroke="currentColor" strokeWidth={4} strokeLinecap="round"/><path d="M58 40 L67 20 L76 40 M61 33 L73 33" fill="none" stroke="currentColor" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round"/></>),
+  },
+  {
+    name: 'Peugeot', viewBox: '0 0 70 80',
+    render: () => (<><path d="M35 4 L66 16 L66 54 C66 68 52 77 35 80 C18 77 4 68 4 54 L4 16 Z" fill="none" stroke="currentColor" strokeWidth={3.5}/><circle cx={35} cy={34} r={12} fill="none" stroke="currentColor" strokeWidth={3}/><path d="M24 46 C24 62 46 62 46 46" fill="none" stroke="currentColor" strokeWidth={3}/></>),
+  },
 ];
 
 const POPULAR_SEARCHES = ['Fiat Argo', 'Honda HRV', 'Toyota Corolla', 'Hyundai Creta'];
@@ -56,31 +117,10 @@ function StatCard({ stat, active, delay }: { stat: typeof STATS[0]; active: bool
 }
 
 export function HeroSection() {
-  const [activeImg, setActiveImg] = useState(0);
-  const [bgImages, setBgImages] = useState<string[]>(FALLBACK_IMAGES);
   const [statsVisible, setStatsVisible] = useState(false);
   const [query, setQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
-
-  // Busca banners da API
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? '';
-    fetch(`${apiUrl}/api/v1/banners`)
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: { imageUrl: string }[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBgImages(data.map((b) => b.imageUrl));
-        }
-      })
-      .catch(() => { /* mantém fallback */ });
-  }, []);
-
-  // Slideshow automático
-  useEffect(() => {
-    const id = setInterval(() => setActiveImg((i) => (i + 1) % bgImages.length), 5000);
-    return () => clearInterval(id);
-  }, [bgImages.length]);
 
   // Dispara contadores após mount
   useEffect(() => {
@@ -118,23 +158,46 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-screen flex-col overflow-hidden noise-overlay">
-      {/* ── Background slideshow ── */}
-      {bgImages.map((src, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={src}
-          src={src}
-          alt=""
-          aria-hidden
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-            i === activeImg ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      ))}
+      {/* ── Fundo escuro + logotipos de marcas ── */}
+      <div className="absolute inset-0 bg-[#0c0e14]" />
+
+      {/* Marquee de logos — 3 faixas em velocidades e direções diferentes */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden select-none" aria-hidden>
+        {/* Faixa 1 — esquerda */}
+        <div className="absolute top-[5%] flex">
+          <div className="flex animate-marquee-left items-center gap-16">
+            {[...BRAND_LOGOS, ...BRAND_LOGOS].map((b, i) => (
+              <svg key={`r1-${i}`} viewBox={b.viewBox} className="h-14 w-auto flex-shrink-0 text-white/[0.12]">
+                {b.render()}
+              </svg>
+            ))}
+          </div>
+        </div>
+        {/* Faixa 2 — direita */}
+        <div className="absolute top-[40%] flex">
+          <div className="flex animate-marquee-right items-center gap-20">
+            {[...BRAND_LOGOS, ...BRAND_LOGOS].map((b, i) => (
+              <svg key={`r2-${i}`} viewBox={b.viewBox} className="h-11 w-auto flex-shrink-0 text-white/[0.07]">
+                {b.render()}
+              </svg>
+            ))}
+          </div>
+        </div>
+        {/* Faixa 3 — esquerda, mais lenta */}
+        <div className="absolute bottom-[14%] flex">
+          <div className="flex animate-marquee-left-slow items-center gap-14">
+            {[...BRAND_LOGOS, ...BRAND_LOGOS].map((b, i) => (
+              <svg key={`r3-${i}`} viewBox={b.viewBox} className="h-9 w-auto flex-shrink-0 text-white/[0.06]">
+                {b.render()}
+              </svg>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Overlay multicamada */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-      <div className="absolute inset-0 bg-gradient-to-r from-brand-dark/70 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/55 to-black/85" />
+      <div className="absolute inset-0 bg-gradient-to-r from-brand-dark/80 via-transparent to-transparent" />
 
       {/* ── Navbar ── */}
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
@@ -173,8 +236,9 @@ export function HeroSection() {
 
       {/* ── Mascote (desktop) ── */}
       <div className="pointer-events-none absolute bottom-0 right-0 z-10 hidden select-none md:block lg:right-8">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/icons/mascote.svg"
+          src="/icons/mascote.png"
           alt=""
           aria-hidden
           className="h-[560px] w-auto animate-[float_4s_ease-in-out_infinite] object-contain drop-shadow-2xl lg:h-[680px]"
@@ -270,18 +334,7 @@ export function HeroSection() {
           </Link>
         </div>
 
-        {/* Indicadores do slideshow */}
-        <div className="in-view-hidden hero-anim delay-500 mt-8 flex gap-2">
-          {bgImages.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveImg(i)}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                i === activeImg ? 'w-8 bg-white' : 'w-2 bg-white/30'
-              }`}
-            />
-          ))}
-        </div>
+
 
         {/* Scroll-down indicator */}
         <div
