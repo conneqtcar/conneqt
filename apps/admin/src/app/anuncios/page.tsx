@@ -605,7 +605,8 @@ function EditForm({ listing, listingId, onClose }: {
   const mutation = useMutation({
     mutationFn: async (data: EditData) => {
       // Upload new photos and resolve final ordered URL list
-      const originalUrls = (listing?.vehicle?.inspections?.[0]?.media ?? []).map((m: { url: string }) => m.url);
+      const vehicle = (listing?.vehicle ?? {}) as { inspections?: { media?: { url: string }[] }[] };
+      const originalUrls = (vehicle.inspections?.[0]?.media ?? []).map((m: { url: string }) => m.url);
       const hasChanges = photos.some(p => p.isNew) ||
         photos.length !== originalUrls.length ||
         photos.some((p, i) => p.url !== originalUrls[i]);
