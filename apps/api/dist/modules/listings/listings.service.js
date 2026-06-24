@@ -81,7 +81,16 @@ let ListingsService = class ListingsService {
                         include: {
                             inspections: {
                                 where: { status: 'APPROVED' },
-                                select: { id: true, score: true },
+                                select: {
+                                    id: true,
+                                    score: true,
+                                    media: {
+                                        where: { type: 'PHOTO' },
+                                        select: { url: true, type: true },
+                                        take: 1,
+                                        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+                                    },
+                                },
                                 take: 1,
                             },
                         },
@@ -104,7 +113,7 @@ let ListingsService = class ListingsService {
                         inspections: {
                             where: { status: 'APPROVED' },
                             include: {
-                                media: { where: { type: 'PHOTO' }, orderBy: { createdAt: 'asc' } },
+                                media: { where: { type: 'PHOTO' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
                                 items: { orderBy: [{ category: 'asc' }, { item: 'asc' }], take: 50 },
                             },
                             take: 1,

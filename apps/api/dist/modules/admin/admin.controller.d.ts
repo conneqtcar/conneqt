@@ -44,6 +44,12 @@ export declare class AdminController {
         id: string;
         kycStatus: import("packages/database/dist/generated").$Enums.KycStatus;
     }>;
+    promoteToAdmin(id: string): Promise<{
+        name: string;
+        type: import("packages/database/dist/generated").$Enums.UserType;
+        email: string;
+        id: string;
+    }>;
     createDealer(body: {
         companyName: string;
         cnpj: string;
@@ -65,7 +71,11 @@ export declare class AdminController {
         cnpj: string;
         plan: import("packages/database/dist/generated").$Enums.DealerPlan;
     }>;
-    createListing(body: {
+    createListing(req: {
+        user: {
+            sub: string;
+        };
+    }, body: {
         brand: string;
         model: string;
         year: number;
@@ -94,6 +104,156 @@ export declare class AdminController {
         seller: {
             name: string;
             email: string;
+        };
+    } & {
+        description: string | null;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.ListingStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        expiresAt: Date | null;
+        vehicleId: string;
+        sellerId: string;
+        price: number;
+        acceptsFinancing: boolean;
+        acceptsTrade: boolean;
+        views: number;
+        soldAt: Date | null;
+    }>;
+    getListing(id: string): Promise<{
+        vehicle: {
+            inspections: ({
+                media: {
+                    type: import("packages/database/dist/generated").$Enums.MediaType;
+                    id: string;
+                    createdAt: Date;
+                    inspectionId: string;
+                    url: string;
+                    key: string;
+                    hash: string;
+                    metadata: import("packages/database/dist/generated/runtime/library").JsonValue | null;
+                }[];
+            } & {
+                type: import("packages/database/dist/generated").$Enums.InspectionType;
+                id: string;
+                status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                vehicleId: string;
+                score: number | null;
+                reviewerId: string | null;
+                reviewedAt: Date | null;
+                reviewNotes: string | null;
+                aiFlags: string[];
+                aiProcessedAt: Date | null;
+            })[];
+        } & {
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.VehicleStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            plate: string | null;
+            chassis: string | null;
+            renavam: string | null;
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+            color: string | null;
+            mileage: number;
+            fuelType: import("packages/database/dist/generated").$Enums.FuelType | null;
+            transmission: import("packages/database/dist/generated").$Enums.TransmissionType | null;
+            fipeCode: string | null;
+            fipePrice: number | null;
+            ownerId: string;
+        };
+        seller: {
+            name: string;
+            email: string;
+            id: string;
+        };
+    } & {
+        description: string | null;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.ListingStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        expiresAt: Date | null;
+        vehicleId: string;
+        sellerId: string;
+        price: number;
+        acceptsFinancing: boolean;
+        acceptsTrade: boolean;
+        views: number;
+        soldAt: Date | null;
+    }>;
+    updateListing(id: string, body: {
+        brand?: string;
+        model?: string;
+        year?: number;
+        color?: string;
+        mileage?: number;
+        fuelType?: string;
+        transmission?: string;
+        bodyType?: string;
+        doors?: number;
+        plate?: string;
+        chassis?: string;
+        renavam?: string;
+        price?: number;
+        description?: string;
+        acceptsFinancing?: boolean;
+        acceptsTrade?: boolean;
+        photoUrls?: string[];
+    }): Promise<{
+        vehicle: {
+            inspections: ({
+                media: {
+                    type: import("packages/database/dist/generated").$Enums.MediaType;
+                    id: string;
+                    createdAt: Date;
+                    inspectionId: string;
+                    url: string;
+                    key: string;
+                    hash: string;
+                    metadata: import("packages/database/dist/generated/runtime/library").JsonValue | null;
+                }[];
+            } & {
+                type: import("packages/database/dist/generated").$Enums.InspectionType;
+                id: string;
+                status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                vehicleId: string;
+                score: number | null;
+                reviewerId: string | null;
+                reviewedAt: Date | null;
+                reviewNotes: string | null;
+                aiFlags: string[];
+                aiProcessedAt: Date | null;
+            })[];
+        } & {
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.VehicleStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            plate: string | null;
+            chassis: string | null;
+            renavam: string | null;
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+            color: string | null;
+            mileage: number;
+            fuelType: import("packages/database/dist/generated").$Enums.FuelType | null;
+            transmission: import("packages/database/dist/generated").$Enums.TransmissionType | null;
+            fipeCode: string | null;
+            fipePrice: number | null;
+            ownerId: string;
+        };
+        seller: {
+            name: string;
+            email: string;
+            id: string;
         };
     } & {
         description: string | null;

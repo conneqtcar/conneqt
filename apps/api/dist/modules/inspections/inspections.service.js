@@ -50,11 +50,28 @@ let InspectionsService = class InspectionsService {
             },
         });
     }
-    async getUploadUrl(inspectionId, ownerId, fileName, mimeType) {
+    async uploadMediaFile(inspectionId, ownerId, file, label, sortOrder) {
         const inspection = await this.assertOwnership(inspectionId, ownerId);
-        const key = `inspections/${inspectionId}/${Date.now()}-${fileName}`;
-        const presignedUrl = await this.storageService.getPresignedPutUrl(key, mimeType);
-        return { uploadUrl: presignedUrl, key };
+        if (inspection.status === 'APPROVED' || inspection.status === 'REJECTED') {
+            throw new common_1.BadRequestException('Esta inspeção já foi finalizada.');
+        }
+        const key = `inspections/${inspectionId}/${Date.now()}-${file.originalname}`;
+        const url = await this.storageService.uploadBuffer(key, file.buffer, file.mimetype);
+        await this.prisma.inspection.update({
+            where: { id: inspectionId },
+            data: { status: 'IN_PROGRESS' },
+        });
+        const media = await this.prisma.inspectionMedia.create({
+            data: {
+                inspectionId,
+                type: 'PHOTO',
+                url,
+                key,
+                hash: key,
+                metadata: { label, sortOrder },
+            },
+        });
+        return { url, mediaId: media.id };
     }
     async submitMedia(inspectionId, ownerId, dto) {
         const inspection = await this.assertOwnership(inspectionId, ownerId);
@@ -65,14 +82,16 @@ let InspectionsService = class InspectionsService {
             where: { id: inspectionId },
             data: { status: 'IN_PROGRESS' },
         });
+        const baseTime = Date.now();
         const media = await this.prisma.inspectionMedia.createMany({
-            data: dto.media.map((m) => ({
+            data: dto.media.map((m, i) => ({
                 inspectionId,
                 type: m.type,
                 url: m.url,
                 key: m.key,
                 hash: m.hash,
                 metadata: m.metadata,
+                createdAt: new Date(baseTime + i),
             })),
         });
         this.eventEmitter.emit('inspection.media_submitted', {

@@ -23,9 +23,9 @@ export declare class InspectionsService {
         aiFlags: string[];
         aiProcessedAt: Date | null;
     }>;
-    getUploadUrl(inspectionId: string, ownerId: string, fileName: string, mimeType: string): Promise<{
-        uploadUrl: string;
-        key: string;
+    uploadMediaFile(inspectionId: string, ownerId: string, file: Express.Multer.File, label: string, sortOrder: number): Promise<{
+        url: string;
+        mediaId: string;
     }>;
     submitMedia(inspectionId: string, ownerId: string, dto: SubmitMediaDto): Promise<{
         message: string;

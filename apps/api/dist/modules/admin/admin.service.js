@@ -153,6 +153,105 @@ let AdminService = class AdminService {
             return dealer;
         });
     }
+    async promoteToAdmin(userId) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            throw new common_1.NotFoundException('Usuário não encontrado.');
+        if (user.type === 'ADMIN')
+            throw new common_1.ConflictException('Usuário já é administrador.');
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: { type: 'ADMIN' },
+            select: { id: true, name: true, email: true, type: true },
+        });
+    }
+    async getListing(listingId) {
+        const listing = await this.prisma.listing.findUnique({
+            where: { id: listingId },
+            include: {
+                vehicle: {
+                    include: {
+                        inspections: {
+                            where: { status: 'APPROVED' },
+                            include: { media: { where: { type: 'PHOTO' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+                            take: 1,
+                        },
+                    },
+                },
+                seller: { select: { id: true, name: true, email: true } },
+            },
+        });
+        if (!listing)
+            throw new common_1.NotFoundException('Anúncio não encontrado.');
+        return listing;
+    }
+    async updateListing(listingId, dto) {
+        const listing = await this.prisma.listing.findUnique({
+            where: { id: listingId },
+            include: {
+                vehicle: {
+                    include: {
+                        inspections: { where: { status: 'APPROVED' }, take: 1 },
+                    },
+                },
+            },
+        });
+        if (!listing)
+            throw new common_1.NotFoundException('Anúncio não encontrado.');
+        const { brand, model, year, color, mileage, fuelType, transmission, bodyType, doors, plate, chassis, renavam, price, description, acceptsFinancing, acceptsTrade, photoUrls } = dto;
+        await this.prisma.$transaction(async (tx) => {
+            await tx.vehicle.update({
+                where: { id: listing.vehicleId },
+                data: {
+                    ...(brand !== undefined && { brand }),
+                    ...(model !== undefined && { model }),
+                    ...(year !== undefined && { year }),
+                    ...(color !== undefined && { color }),
+                    ...(mileage !== undefined && { mileage }),
+                    ...(fuelType !== undefined && { fuelType: fuelType }),
+                    ...(transmission !== undefined && { transmission: transmission }),
+                    ...(plate !== undefined && { plate: plate || null }),
+                    ...(chassis !== undefined && { chassis: chassis || null }),
+                    ...(renavam !== undefined && { renavam: renavam || null }),
+                },
+            });
+            const extras = [];
+            if (bodyType)
+                extras.push(bodyType);
+            if (doors)
+                extras.push(`${doors} portas`);
+            const descriptionFinal = description !== undefined
+                ? [description, extras.join(' · ')].filter(Boolean).join('\n') || null
+                : undefined;
+            await tx.listing.update({
+                where: { id: listingId },
+                data: {
+                    ...(price !== undefined && { price }),
+                    ...(descriptionFinal !== undefined && { description: descriptionFinal }),
+                    ...(acceptsFinancing !== undefined && { acceptsFinancing }),
+                    ...(acceptsTrade !== undefined && { acceptsTrade }),
+                },
+            });
+            if (photoUrls !== undefined) {
+                const inspection = listing.vehicle.inspections[0];
+                if (inspection) {
+                    await tx.inspectionMedia.deleteMany({ where: { inspectionId: inspection.id } });
+                    if (photoUrls.length > 0) {
+                        await tx.inspectionMedia.createMany({
+                            data: photoUrls.map((url, i) => ({
+                                inspectionId: inspection.id,
+                                type: /\.(mp4|mov|avi|webm)$/i.test(url) ? 'VIDEO' : 'PHOTO',
+                                url,
+                                key: `admin/${listing.vehicleId}/edit-${i}-${Date.now()}`,
+                                hash: `edit-${listing.vehicleId}-${i}`,
+                            })),
+                        });
+                    }
+                }
+            }
+        });
+        return this.getListing(listingId);
+    }
     async deactivateListing(listingId) {
         return this.prisma.listing.update({
             where: { id: listingId },
@@ -192,10 +291,13 @@ let AdminService = class AdminService {
         ]);
         return { data: inspections, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
-    async createListing(dto) {
+    async createListing(dto, adminUserId) {
         let seller = dto.sellerEmail
             ? await this.prisma.user.findUnique({ where: { email: dto.sellerEmail } })
             : null;
+        if (!seller) {
+            seller = await this.prisma.user.findUnique({ where: { id: adminUserId } });
+        }
         if (!seller) {
             seller = await this.prisma.user.findFirst({ where: { type: 'ADMIN' } });
         }

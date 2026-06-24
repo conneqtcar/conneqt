@@ -42,11 +42,20 @@ let AdminController = class AdminController {
     rejectKyc(id, body) {
         return this.adminService.rejectKyc(id, body.reason);
     }
+    promoteToAdmin(id) {
+        return this.adminService.promoteToAdmin(id);
+    }
     createDealer(body) {
         return this.adminService.createDealer(body);
     }
-    createListing(body) {
-        return this.adminService.createListing(body);
+    createListing(req, body) {
+        return this.adminService.createListing(body, req.user.sub);
+    }
+    getListing(id) {
+        return this.adminService.getListing(id);
+    }
+    updateListing(id, body) {
+        return this.adminService.updateListing(id, body);
     }
     deactivateListing(id) {
         return this.adminService.deactivateListing(id);
@@ -115,6 +124,15 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "rejectKyc", null);
 __decorate([
+    (0, common_1.Patch)('users/:id/promote-admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Promover usuário a administrador' }),
+    openapi.ApiResponse({ status: 200 }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "promoteToAdmin", null);
+__decorate([
     (0, common_1.Post)('dealers'),
     (0, swagger_1.ApiOperation)({ summary: 'Cadastrar lojista manualmente (admin)' }),
     openapi.ApiResponse({ status: 201 }),
@@ -127,11 +145,31 @@ __decorate([
     (0, common_1.Post)('listings'),
     (0, swagger_1.ApiOperation)({ summary: 'Criar anúncio manualmente (admin)' }),
     openapi.ApiResponse({ status: 201, type: Object }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "createListing", null);
+__decorate([
+    (0, common_1.Get)('listings/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Buscar anúncio por ID (admin)' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "getListing", null);
+__decorate([
+    (0, common_1.Patch)('listings/:id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Editar anúncio (admin)' }),
+    openapi.ApiResponse({ status: 200, type: Object }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "updateListing", null);
 __decorate([
     (0, common_1.Patch)('listings/:id/deactivate'),
     (0, swagger_1.ApiOperation)({ summary: 'Desativar anúncio (admin)' }),

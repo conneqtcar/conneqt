@@ -10,6 +10,10 @@ export declare class ListingsController {
                 inspections: {
                     id: string;
                     score: number | null;
+                    media: {
+                        type: import("packages/database/dist/generated").$Enums.MediaType;
+                        url: string;
+                    }[];
                 }[];
             } & {
                 id: string;

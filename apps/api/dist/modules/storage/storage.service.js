@@ -19,9 +19,11 @@ let StorageService = class StorageService {
     bucket;
     constructor(configService) {
         this.configService = configService;
-        this.supabaseUrl = configService.get('SUPABASE_URL', '');
+        this.supabaseUrl =
+            configService.get('SUPABASE_URL') ||
+                configService.get('NEXT_PUBLIC_SUPABASE_URL', '');
         this.serviceKey = configService.get('SUPABASE_SERVICE_ROLE_KEY', '');
-        this.bucket = configService.get('SUPABASE_STORAGE_BUCKET', 'banners');
+        this.bucket = configService.get('SUPABASE_STORAGE_BUCKET', 'inspection-media');
     }
     async uploadBuffer(key, buffer, contentType) {
         if (!this.supabaseUrl || !this.serviceKey) {

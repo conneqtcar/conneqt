@@ -1,4 +1,4 @@
-import { PrismaClient } from '@conneqtcar/database';
+import { PrismaClient, Prisma } from '@conneqtcar/database';
 export declare class AdminService {
     private readonly prisma;
     constructor(prisma: PrismaClient);
@@ -59,6 +59,162 @@ export declare class AdminService {
         cnpj: string;
         plan: import("packages/database/dist/generated").$Enums.DealerPlan;
     }>;
+    promoteToAdmin(userId: string): Promise<{
+        name: string;
+        type: import("packages/database/dist/generated").$Enums.UserType;
+        email: string;
+        id: string;
+    }>;
+    getListing(listingId: string): Promise<{
+        vehicle: {
+            inspections: ({
+                media: {
+                    type: import("packages/database/dist/generated").$Enums.MediaType;
+                    id: string;
+                    createdAt: Date;
+                    inspectionId: string;
+                    url: string;
+                    key: string;
+                    hash: string;
+                    metadata: Prisma.JsonValue | null;
+                }[];
+            } & {
+                type: import("packages/database/dist/generated").$Enums.InspectionType;
+                id: string;
+                status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                vehicleId: string;
+                score: number | null;
+                reviewerId: string | null;
+                reviewedAt: Date | null;
+                reviewNotes: string | null;
+                aiFlags: string[];
+                aiProcessedAt: Date | null;
+            })[];
+        } & {
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.VehicleStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            plate: string | null;
+            chassis: string | null;
+            renavam: string | null;
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+            color: string | null;
+            mileage: number;
+            fuelType: import("packages/database/dist/generated").$Enums.FuelType | null;
+            transmission: import("packages/database/dist/generated").$Enums.TransmissionType | null;
+            fipeCode: string | null;
+            fipePrice: number | null;
+            ownerId: string;
+        };
+        seller: {
+            name: string;
+            email: string;
+            id: string;
+        };
+    } & {
+        description: string | null;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.ListingStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        expiresAt: Date | null;
+        vehicleId: string;
+        sellerId: string;
+        price: number;
+        acceptsFinancing: boolean;
+        acceptsTrade: boolean;
+        views: number;
+        soldAt: Date | null;
+    }>;
+    updateListing(listingId: string, dto: {
+        brand?: string;
+        model?: string;
+        year?: number;
+        color?: string;
+        mileage?: number;
+        fuelType?: string;
+        transmission?: string;
+        bodyType?: string;
+        doors?: number;
+        plate?: string;
+        chassis?: string;
+        renavam?: string;
+        price?: number;
+        description?: string;
+        acceptsFinancing?: boolean;
+        acceptsTrade?: boolean;
+        photoUrls?: string[];
+    }): Promise<{
+        vehicle: {
+            inspections: ({
+                media: {
+                    type: import("packages/database/dist/generated").$Enums.MediaType;
+                    id: string;
+                    createdAt: Date;
+                    inspectionId: string;
+                    url: string;
+                    key: string;
+                    hash: string;
+                    metadata: Prisma.JsonValue | null;
+                }[];
+            } & {
+                type: import("packages/database/dist/generated").$Enums.InspectionType;
+                id: string;
+                status: import("packages/database/dist/generated").$Enums.InspectionStatus;
+                createdAt: Date;
+                updatedAt: Date;
+                vehicleId: string;
+                score: number | null;
+                reviewerId: string | null;
+                reviewedAt: Date | null;
+                reviewNotes: string | null;
+                aiFlags: string[];
+                aiProcessedAt: Date | null;
+            })[];
+        } & {
+            id: string;
+            status: import("packages/database/dist/generated").$Enums.VehicleStatus;
+            createdAt: Date;
+            updatedAt: Date;
+            plate: string | null;
+            chassis: string | null;
+            renavam: string | null;
+            brand: string | null;
+            model: string | null;
+            year: number | null;
+            color: string | null;
+            mileage: number;
+            fuelType: import("packages/database/dist/generated").$Enums.FuelType | null;
+            transmission: import("packages/database/dist/generated").$Enums.TransmissionType | null;
+            fipeCode: string | null;
+            fipePrice: number | null;
+            ownerId: string;
+        };
+        seller: {
+            name: string;
+            email: string;
+            id: string;
+        };
+    } & {
+        description: string | null;
+        id: string;
+        status: import("packages/database/dist/generated").$Enums.ListingStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        expiresAt: Date | null;
+        vehicleId: string;
+        sellerId: string;
+        price: number;
+        acceptsFinancing: boolean;
+        acceptsTrade: boolean;
+        views: number;
+        soldAt: Date | null;
+    }>;
     deactivateListing(listingId: string): Promise<{
         id: string;
         status: import("packages/database/dist/generated").$Enums.ListingStatus;
@@ -108,7 +264,7 @@ export declare class AdminService {
         acceptsTrade: boolean;
         sellerEmail?: string;
         photoUrls?: string[];
-    }): Promise<{
+    }, adminUserId: string): Promise<{
         vehicle: {
             plate: string | null;
             brand: string | null;

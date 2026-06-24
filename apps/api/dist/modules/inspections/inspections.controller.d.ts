@@ -2,7 +2,6 @@ import { InspectionsService } from './inspections.service';
 import { CreateInspectionDto } from './dto/create-inspection.dto';
 import { SubmitMediaDto } from './dto/submit-media.dto';
 import { ReviewInspectionDto } from './dto/review-inspection.dto';
-import { GetUploadUrlDto } from './dto/get-upload-url.dto';
 export declare class InspectionsController {
     private readonly inspectionsService;
     constructor(inspectionsService: InspectionsService);
@@ -24,13 +23,16 @@ export declare class InspectionsController {
         aiFlags: string[];
         aiProcessedAt: Date | null;
     }>;
-    getUploadUrl(id: string, req: {
+    uploadMedia(id: string, req: {
         user: {
             sub: string;
         };
-    }, dto: GetUploadUrlDto): Promise<{
-        uploadUrl: string;
-        key: string;
+    }, file: Express.Multer.File, body: {
+        label?: string;
+        sortOrder?: string;
+    }): Promise<{
+        url: string;
+        mediaId: string;
     }>;
     submitMedia(id: string, req: {
         user: {

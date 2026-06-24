@@ -15,13 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InspectionsController = void 0;
 const openapi = require("@nestjs/swagger");
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const inspections_service_1 = require("./inspections.service");
 const create_inspection_dto_1 = require("./dto/create-inspection.dto");
 const submit_media_dto_1 = require("./dto/submit-media.dto");
 const review_inspection_dto_1 = require("./dto/review-inspection.dto");
-const get_upload_url_dto_1 = require("./dto/get-upload-url.dto");
 let InspectionsController = class InspectionsController {
     inspectionsService;
     constructor(inspectionsService) {
@@ -30,8 +30,10 @@ let InspectionsController = class InspectionsController {
     create(req, dto) {
         return this.inspectionsService.create(req.user.sub, dto);
     }
-    getUploadUrl(id, req, dto) {
-        return this.inspectionsService.getUploadUrl(id, req.user.sub, dto.fileName, dto.mimeType);
+    async uploadMedia(id, req, file, body) {
+        if (!file)
+            throw new common_1.BadRequestException('Nenhum arquivo enviado.');
+        return this.inspectionsService.uploadMediaFile(id, req.user.sub, file, body.label ?? '', body.sortOrder ? parseInt(body.sortOrder, 10) : 0);
     }
     submitMedia(id, req, dto) {
         return this.inspectionsService.submitMedia(id, req.user.sub, dto);
@@ -58,16 +60,18 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], InspectionsController.prototype, "create", null);
 __decorate([
-    (0, common_1.Post)(':id/upload-url'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obter URL pré-assinada para upload de mídia' }),
+    (0, common_1.Post)(':id/upload-media'),
+    (0, swagger_1.ApiOperation)({ summary: 'Upload direto de foto de inspeção' }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: 20 * 1024 * 1024 } })),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
-    __param(2, (0, common_1.Body)()),
+    __param(2, (0, common_1.UploadedFile)()),
+    __param(3, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, get_upload_url_dto_1.GetUploadUrlDto]),
-    __metadata("design:returntype", void 0)
-], InspectionsController.prototype, "getUploadUrl", null);
+    __metadata("design:paramtypes", [String, Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], InspectionsController.prototype, "uploadMedia", null);
 __decorate([
     (0, common_1.Post)(':id/media'),
     (0, swagger_1.ApiOperation)({ summary: 'Registrar mídias enviadas para a inspeção' }),
