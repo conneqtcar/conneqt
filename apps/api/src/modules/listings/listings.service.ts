@@ -101,7 +101,8 @@ export class ListingsService {
                     where: { type: 'PHOTO' },
                     select: { url: true, type: true },
                     take: 1,
-                    orderBy: { createdAt: 'asc' as const },
+                    // createdAt sozinho empata em inserts em lote (createMany); id garante ordem estável
+                    orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
                   },
                 },
                 take: 1,
@@ -129,7 +130,7 @@ export class ListingsService {
               where: { status: 'APPROVED' },
               include: {
                 // Apenas fotos, sem vídeos pesados no primeiro load
-                media: { where: { type: 'PHOTO' }, orderBy: { createdAt: 'asc' } },
+                media: { where: { type: 'PHOTO' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
                 // Limite de 50 itens (suficiente para exibir o laudo completo)
                 items: { orderBy: [{ category: 'asc' }, { item: 'asc' }], take: 50 },
               },

@@ -93,14 +93,18 @@ export class InspectionsService {
       data: { status: 'IN_PROGRESS' },
     });
 
+    // createMany insere tudo numa única instrução SQL, então now() empata para todos os itens;
+    // timestamps incrementais preservam a ordem de envio (1ª foto enviada = 1ª exibida).
+    const baseTime = Date.now();
     const media = await this.prisma.inspectionMedia.createMany({
-      data: dto.media.map((m) => ({
+      data: dto.media.map((m, i) => ({
         inspectionId,
         type: m.type,
         url: m.url,
         key: m.key,
         hash: m.hash,
         metadata: m.metadata as any,
+        createdAt: new Date(baseTime + i),
       })),
     });
 

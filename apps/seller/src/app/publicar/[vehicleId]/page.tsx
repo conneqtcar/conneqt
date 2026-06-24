@@ -43,6 +43,8 @@ export default function PublicarPage() {
     defaultValues: { acceptsExchange: false, acceptsFinancing: true },
   });
 
+  const priceField = register('price');
+
   const onSubmit = async (values: FormData) => {
     try {
       await api.post('/listings', {
@@ -102,9 +104,15 @@ export default function PublicarPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700">Preço de venda (R$)</label>
               <input
-                {...register('price')}
-                type="number"
-                step="1000"
+                {...priceField}
+                type="text"
+                inputMode="numeric"
+                onChange={(e) => {
+                  // Aceita apenas dígitos: evita que "." (separador de milhar em pt-BR)
+                  // seja confundido com ponto decimal e gere um preço 1000x menor.
+                  e.target.value = e.target.value.replace(/\D/g, '');
+                  priceField.onChange(e);
+                }}
                 placeholder={vehicle?.fipePrice ? String(vehicle.fipePrice) : '85000'}
                 className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-brand-gold focus:outline-none"
               />

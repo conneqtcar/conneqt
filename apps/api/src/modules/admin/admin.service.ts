@@ -150,7 +150,7 @@ export class AdminService {
           include: {
             inspections: {
               where: { status: 'APPROVED' },
-              include: { media: { where: { type: 'PHOTO' }, orderBy: { createdAt: 'asc' } } },
+              include: { media: { where: { type: 'PHOTO' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
               take: 1,
             },
           },

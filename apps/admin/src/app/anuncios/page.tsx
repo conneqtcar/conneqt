@@ -80,6 +80,7 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
 
   const acceptsFinancing = watch('acceptsFinancing');
   const acceptsTrade = watch('acceptsTrade');
+  const priceField = register('price');
 
   const [isUploading, setIsUploading] = useState(false);
 
@@ -323,10 +324,15 @@ function CriarAnuncioModal({ onClose }: { onClose: () => void }) {
                 <div className="relative mt-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">R$</span>
                   <input
-                    {...register('price')}
-                    type="number"
-                    min={1}
-                    step={1}
+                    {...priceField}
+                    type="text"
+                    inputMode="numeric"
+                    onChange={(e) => {
+                      // Aceita apenas dígitos: evita que "." (separador de milhar em pt-BR)
+                      // seja confundido com ponto decimal e gere um preço 1000x menor.
+                      e.target.value = e.target.value.replace(/\D/g, '');
+                      priceField.onChange(e);
+                    }}
                     placeholder="89900"
                     className={`${fi} pl-9`}
                   />
@@ -581,6 +587,7 @@ function EditForm({ listing, listingId, onClose }: {
 
   const acceptsFinancing = watch('acceptsFinancing');
   const acceptsTrade = watch('acceptsTrade');
+  const priceField = register('price');
 
   const addFiles = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -696,7 +703,18 @@ function EditForm({ listing, listingId, onClose }: {
                     <div className="relative">
                       <label className={la}>Preço de venda *</label>
                       <span className="absolute left-3 top-[calc(50%+6px)] -translate-y-1/2 text-sm text-gray-400">R$</span>
-                      <input {...register('price')} type="number" min={1} step={1} className={`${fi} pl-9`} />
+                      <input
+                        {...priceField}
+                        type="text"
+                        inputMode="numeric"
+                        onChange={(e) => {
+                          // Aceita apenas dígitos: evita que "." (separador de milhar em pt-BR)
+                          // seja confundido com ponto decimal e gere um preço 1000x menor.
+                          e.target.value = e.target.value.replace(/\D/g, '');
+                          priceField.onChange(e);
+                        }}
+                        className={`${fi} pl-9`}
+                      />
                       {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price.message}</p>}
                     </div>
                   </div>
