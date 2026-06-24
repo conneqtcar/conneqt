@@ -17,6 +17,8 @@ import {
   Star,
   Fuel,
   Settings2,
+  X,
+  ZoomIn,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState, useEffect } from 'react';
@@ -35,6 +37,7 @@ export function ListingDetail({ listing }: ListingDetailProps) {
   const inspection = inspections[0];
   const [chatOpen, setChatOpen] = useState(false);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [navSolid, setNavSolid] = useState(false);
   const [saved, setSaved] = useState(false);
   const router = useRouter();
@@ -49,6 +52,17 @@ export function ListingDetail({ listing }: ListingDetailProps) {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'ArrowLeft') setActivePhoto((p) => (p - 1 + images.length) % images.length);
+      if (e.key === 'ArrowRight') setActivePhoto((p) => (p + 1) % images.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightboxOpen, images.length]);
 
   const listingTitle = `${vehicle?.brand as string} ${vehicle?.model as string} ${vehicle?.year as number}`;
 
@@ -160,11 +174,21 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         <img
           src={images[activePhoto]}
           alt={listingTitle}
-          className="h-full w-full object-cover transition-all duration-500"
+          onClick={() => setLightboxOpen(true)}
+          className="h-full w-full cursor-zoom-in object-cover transition-all duration-500"
         />
 
+        {/* Dica: ver foto sem corte */}
+        <button
+          onClick={() => setLightboxOpen(true)}
+          className="absolute right-6 top-36 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm transition hover:bg-black/60 sm:right-6"
+        >
+          <ZoomIn className="h-3.5 w-3.5" />
+          Ver foto completa
+        </button>
+
         {/* Gradientes */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/40 pointer-events-none" />
 
         {/* Navegação setas */}
         {images.length > 1 && (
@@ -256,8 +280,11 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         {images.map((src, i) => (
           <button
             key={i}
-            onClick={() => setActivePhoto(i)}
-            className={`relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+            onClick={() => {
+              setActivePhoto(i);
+              setLightboxOpen(true);
+            }}
+            className={`relative h-14 w-20 flex-shrink-0 cursor-zoom-in overflow-hidden rounded-lg border-2 transition-all ${
               i === activePhoto
                 ? 'border-blue-400 opacity-100 ring-1 ring-blue-400'
                 : 'border-transparent opacity-50 hover:opacity-80'
@@ -269,6 +296,9 @@ export function ListingDetail({ listing }: ListingDetailProps) {
         ))}
         <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
           {activePhoto + 1} / {images.length}
+        </span>
+        <span className="ml-1 flex-shrink-0 text-xs text-gray-500">
+          · clique para ampliar
         </span>
       </div>
 
@@ -464,6 +494,56 @@ export function ListingDetail({ listing }: ListingDetailProps) {
           sellerName={seller?.name as string}
           onClose={() => setChatOpen(false)}
         />
+      )}
+
+      {/* ── LIGHTBOX (foto sem corte) ───────────────────────────── */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhoto((p) => (p - 1 + images.length) % images.length);
+                }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 sm:left-4"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActivePhoto((p) => (p + 1) % images.length);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 sm:right-4"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={images[activePhoto]}
+            alt={listingTitle}
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-full max-w-full object-contain"
+          />
+
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/70">
+            {activePhoto + 1} / {images.length}
+          </span>
+        </div>
       )}
 
     </div>

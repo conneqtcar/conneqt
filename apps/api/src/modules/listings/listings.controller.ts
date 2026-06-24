@@ -34,8 +34,8 @@ export class ListingsController {
 
   @Get(':id')
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(300_000)
-  @Header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+  @CacheTTL(15_000)
+  @Header('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30')
   @ApiOperation({ summary: 'Detalhes de um anúncio com laudo' })
   findOne(@Param('id') id: string) {
     return this.listingsService.findById(id);

@@ -55,8 +55,8 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseInterceptors)(cache_manager_1.CacheInterceptor),
-    (0, cache_manager_1.CacheTTL)(300_000),
-    (0, common_1.Header)('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600'),
+    (0, cache_manager_1.CacheTTL)(15_000),
+    (0, common_1.Header)('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=30'),
     (0, swagger_1.ApiOperation)({ summary: 'Detalhes de um anúncio com laudo' }),
     openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Param)('id')),

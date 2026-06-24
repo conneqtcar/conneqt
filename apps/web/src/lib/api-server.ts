@@ -32,7 +32,7 @@ export const apiServer = {
       }
       return fetchApi<{ vehicle: { brand: string; model: string; year: number }; price: number; description: string | null }>(
         `/listings/${id}`,
-        { next: { revalidate: 300, tags: [`listing-${id}`] } },
+        { next: { revalidate: 20, tags: [`listing-${id}`] } },
       );
     },
     search: (params: Record<string, string | undefined>) => {
